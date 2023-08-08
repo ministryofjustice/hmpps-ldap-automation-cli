@@ -1,5 +1,8 @@
 from ldap3 import Server, Connection, ALL
 import oracledb
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def ldap_connect(ldap_host, ldap_user, ldap_password):
