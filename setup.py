@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="ldap-automation",
     version="0.1",
-    py_modules=["cli"],
+    packages=find_packages(),
     # install_requires=["Click", "ldap3", "oracledb"],
     install_requires=["Click", "ldap3"],
     entry_points="""
