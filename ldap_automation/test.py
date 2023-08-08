@@ -6,7 +6,7 @@ import logging
 import click
 
 
-def test():
+def test_search():
     ldap_connection = ldap_connect(config.ldap_host, config.ldap_user, config.ldap_password)
     ldap_connection.search(
         "ou=Users,dc=moj,dc=com",
@@ -18,6 +18,5 @@ def test():
 
 
 @click.command()
-@click.argument("user-role-list", required=True)
-def add_roles_to_users():
-    test()
+def test():
+    test_search()
