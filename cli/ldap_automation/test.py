@@ -1,8 +1,6 @@
-import config
-from ldap_automation import ldap_connect
+from cli import config
+from cli.ldap_automation import ldap_connect
 from ldap3 import SUBTREE
-import logging
-
 import click
 
 

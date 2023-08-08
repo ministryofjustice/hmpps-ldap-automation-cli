@@ -2,8 +2,8 @@ import logging
 
 import click
 
-import config
-from ldap_automation import ldap_connect
+from cli import config
+from cli.ldap_automation import ldap_connect
 
 
 def parse_user_role_list(user_role_list):
