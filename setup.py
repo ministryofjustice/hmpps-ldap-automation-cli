@@ -8,6 +8,6 @@ setup(
     install_requires=["Click", "ldap3"],
     entry_points="""
         [console_scripts]
-        ldap-automation=cli:cli
+        ldap-automation=cli:main_group
     """,
 )
