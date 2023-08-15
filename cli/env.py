@@ -15,10 +15,12 @@ from dotenv import dotenv_values
 # gh_installation_id = os.getenv("GH_INSTALLATION_ID")
 
 vars = {
-    **dotenv_values(".env"),  # load development variables
+    **dotenv_values(".vars"),  # load development variables
     **{key: val for key, val in os.environ.items() if key.startswith(('LDAP_', 'DB_', 'GH_'))}
     # load all other environment variables starting with LDAP_, DB_, GH_
 }
-print(vars)
 # loads all environment variables starting with SECRET_ into a dictionary
-secrets = {key.replace("SECRET_"): val for key, val in os.environ.items() if key.startswith("SECRET_")}
+secrets = {
+    **dotenv_values(".secrets"),
+    **{key.replace("SECRET_"): val for key, val in os.environ.items() if key.startswith("SECRET_")}
+}

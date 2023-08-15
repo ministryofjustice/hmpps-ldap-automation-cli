@@ -1,16 +1,12 @@
 from ldap3 import Server, Connection, ALL
+from logging import log
+
 
 # import oracledb
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-
-
 def ldap_connect(ldap_host, ldap_user, ldap_password):
     return Connection(
         server=ldap_host, user=ldap_user, password=ldap_password, auto_bind="NO_TLS", authentication="SIMPLE"
     )
-
 
 # def db_connect(db_user, db_password, db_host, db_port, db_service_name):
 #     return oracledb.connect(db_user, db_password, db_host, db_port, db_service_name)

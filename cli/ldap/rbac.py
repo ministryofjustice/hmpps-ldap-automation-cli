@@ -2,12 +2,13 @@ from cli import env
 import cli.git as git
 import logging
 import glob
+from logging import log
 
 
 def get_repo():
-    app_id = config.gh_app_id
-    private_key = config.gh_private_key
-    installation_id = config.gh_installation_id
+    app_id = env.vars.get("GH_APP_ID")
+    private_key = env.vars.get("GH_PRIVATE_KEY")
+    installation_id = env.vars.get("GH_INSTALLATION_ID")
     # url = 'https://github.com/ministryofjustice/hmpps-delius-pipelines.git'
     url = 'https://github.com/ministryofjustice/hmpps-ndelius-rbac.git'
     token = git.get_access_token(app_id, private_key, installation_id)
