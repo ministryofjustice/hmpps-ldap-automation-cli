@@ -1,0 +1,47 @@
+---
+name: "Release"
+on:
+   pull_request:
+     types:
+       - closed
+     branches:
+       - main
+       - dev
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.merge_commit_sha }}
+        fetch-depth: '0'
+
+    - name: Bump version and push tag
+      id: tag
+      uses: anothrNick/github-tag-action@1.67.0 # Don't use @master or @v1 unless you're happy to test the latest version
+      env:
+        WITH_V: true
+        PRE_RELEASE_NAME: dev
+    - name: release or prerelease
+      id: release_type
+      run: |
+          if [[ ${{ steps.tag.outputs.new_tag }} == *"dev"* ]]; then
+            echo "This is a prerelease"
+            echo "DEV=true" >> $GITHUB_OUTPUT
+          else
+            echo "This is a release"
+            echo "DEV=false" >> $GITHUB_OUTPUT
+          fi
+    - name: Create prerelease
+      if: steps.release_type.outputs.DEV == 'true'
+      run: |
+        gh release create ${{ steps.tag.outputs.new_tag }} --title "Dev ${{ steps.tag.outputs.new_tag }}" --prerelease --generate-notes --verify-tag
+    - name: Create release
+      if: steps.release_type.outputs.DEV == 'false'
+      run: |
+            gh release create ${{ steps.tag.outputs.new_tag }} --title "Release ${{ steps.tag.outputs.new_tag }}" --generate-notes --verify-tag
