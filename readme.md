@@ -14,4 +14,10 @@
 
 `pip install git+https://github.com/ministryofjustice/hmpps-ldap-automation-cli.git`
 
-Optionally append `@<commit hash>`, `@<branch name>` or `@<tag/release version>` to the end of the url to install a specific commit
+Optionally append `@<commit hash>`, `@<branch name>` or 
+`@<tag/release version>` to the end of the url to install a specific 
+commit
+
+## Usage
+
+`ldap-automation --help`
