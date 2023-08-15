@@ -164,4 +164,3 @@ cython_debug/
 .secrets
 .env
 .vars
-/vars
