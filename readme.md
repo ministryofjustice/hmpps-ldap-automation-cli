@@ -10,7 +10,7 @@
 
 `pip install -e .`
 
-# installation for consuming the package
+## Installation for consuming the package
 
 `pip install git+https://github.com/ministryofjustice/hmpps-ldap-automation-cli.git`
 
