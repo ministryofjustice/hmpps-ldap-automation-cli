@@ -1,6 +1,6 @@
 import logging
 
-from cli import config
+from cli import env
 from cli.ldap import ldap_connect
 
 

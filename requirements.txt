@@ -6,3 +6,4 @@ PyGithub
 GitPython
 pyjwt
 python-dotenv
+Jinja2

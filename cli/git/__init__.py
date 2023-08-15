@@ -4,7 +4,9 @@ import jwt
 import time
 import requests
 import logging
-from cli import config
+from cli import env
+
+
 def get_access_token(app_id, private_key, installation_id):
     # Create a JSON Web Token (JWT) using the app's private key
     now = int(time.time())
@@ -26,6 +28,7 @@ def get_access_token(app_id, private_key, installation_id):
     access_token = response.json().get("token")
     return access_token
 
+
 def get_repo(url, token=None, auth_type="x-access-token", dest_name="repo"):
     # if there is an @ in the url, assume auth is already specified
     if '@' in url:
@@ -40,11 +43,3 @@ def get_repo(url, token=None, auth_type="x-access-token", dest_name="repo"):
     else:
         logging.info('cloning without auth')
         return Repo.clone_from(url, dest_name)
-def dl_test():
-    app_id = config.gh_app_id
-    private_key = config.gh_private_key
-    installation_id = config.gh_installation_id
-    url = 'https://github.com/ministryofjustice/hmpps-delius-pipelines.git'
-    token = get_access_token(app_id, private_key, installation_id)
-    repo = get_repo(url, token=token, dest_name='delius-pipelines')
-    print(repo)

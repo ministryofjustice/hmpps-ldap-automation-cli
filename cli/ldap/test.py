@@ -1,4 +1,4 @@
-from cli import config
+from cli import env
 from cli.ldap import ldap_connect
 from ldap3 import LEVEL
 import click
