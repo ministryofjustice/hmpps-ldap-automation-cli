@@ -1,5 +1,11 @@
 # Quick start guide
 
+
+## Environment variables
+
+Variables are picked up from the environment, or can be specified in a `.env` file in the current directory (at the same level as the file `setup.py`)
+See `cli/config.py` for a list of variables.
+
 ## Installation for development purposes
 
 `python3 -m venv venv`

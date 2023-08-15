@@ -7,6 +7,13 @@ on:
      branches:
        - main
        - dev
+     paths-ignore:
+       - "readme.md"
+       - ".gitignore"
+       - ".gitattributes"
+       - ".vscode/**"
+       - ".idea/**"
+       - ".github/**"
 
 jobs:
   build:
