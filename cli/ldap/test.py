@@ -1,5 +1,5 @@
 from cli import config
-from cli.ldap_automation import ldap_connect
+from cli.ldap import ldap_connect
 from ldap3 import LEVEL
 import click
 

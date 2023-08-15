@@ -1,9 +1,7 @@
 import logging
 
-import click
-
 from cli import config
-from cli.ldap_automation import ldap_connect
+from cli.ldap import ldap_connect
 
 
 def parse_user_role_list(user_role_list):
@@ -35,11 +33,3 @@ def process_user_roles_list(user_role_list, user_ou="ou=Users", root_dn="dc=moj,
     user_roles = parse_user_role_list(user_role_list)
     for user, roles in user_roles.items():
         add_roles_to_user(user, roles, user_ou, root_dn)
-
-
-@click.command()
-@click.option("--user-ou", help="OU to add users to, defaults to ou=Users", default="ou=Users")
-@click.option("--root-dn", help="Root DN to add users to", default="dc=moj,dc=com")
-@click.argument("user-role-list", required=True)
-def add_roles_to_users(user_ou, root_dn, user_role_list):
-    process_user_roles_list(user_role_list, user_ou, root_dn)
