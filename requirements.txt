@@ -1,0 +1,8 @@
+click==8.1.6
+ldap3
+oracledb==1.2.2
+ansible-runner
+PyGithub
+GitPython
+pyjwt
+python-dotenv
