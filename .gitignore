@@ -120,7 +120,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-vars
+env
 .venv
 env/
 venv/
@@ -163,3 +163,5 @@ cython_debug/
 
 .secrets
 .env
+.vars
+/vars
