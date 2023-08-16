@@ -22,14 +22,11 @@ def get_repo():
         return None
 
 
-def prep_for_templating(dir):
-    strings = {
-        r"ldap_config.base_users | regex_replace('^.+?=(.+?),.*$', '\\1')": "ldap_config.base_users_ou",
-        r"ldap_config.base_root | regex_replace('^.+?=(.+?),.*$', '\\1')": "ldap_config.root_ou",
-        r"ldap_config.base_groups | regex_replace('^.+?=(.+?),.*$', '\\1')": "ldap_config.base_groups_ou",
-        r"ldap_config.bind_user | regex_replace('^.+?=(.+?),.*$', '\\1')": "ldap_config.bind_user_ou",
-    }
+def prep_for_templating(dir, strings=None):
+    if strings is None:
+        strings = env.vars.get("RBAC_SUBSTITUTIONS")
     # get a list of files
+    print(type(strings))
     files = [
         file
         for file in glob.glob(f"{dir}/**/*", recursive=True)
