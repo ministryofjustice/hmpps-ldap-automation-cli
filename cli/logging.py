@@ -8,7 +8,7 @@ class SensitiveFormatter(logging.Formatter):
     @staticmethod
     def _filter(s):
         secrets_set = set(secrets.values())
-        redacted = " ".join([s.replace(secret, "*" * len(secret)) for secret in secrets_set])
+        redacted = " ".join([s.replace(secret, "*" * len(secret)) for secret in secrets_set if secret is not None])
         return redacted
 
     def format(self, record):

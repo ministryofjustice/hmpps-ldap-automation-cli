@@ -34,12 +34,12 @@ def prep_for_templating(dir, strings=None):
     files = [
         file
         for file in glob.glob(f"{dir}/**/*", recursive=True)
-        if Path(file).is_file() and Path(file).name.endswith("context.ldif.j2")
+        if Path(file).is_file() and Path(file).name.endswith("ldif.j2")
     ]
     for file_path in files:
         file = Path(file_path)
         for k, v in strings.items():
-            # print("replacing", k, "with", v, "in", file_path)
+            print("replacing", k, "with", v, "in", file_path)
             # print(
             #     file.read_text().replace(k, v),
             # )
@@ -49,13 +49,25 @@ def prep_for_templating(dir, strings=None):
 
 
 def test():
-    # repo = get_repo()
-
-    prep_for_templating("./rbac/")
-    hashed_pwd = ldap3.utils.hashed.hashed(ldap3.HASHED_SALTED_SHA, env.secrets.get("LDAP_PASSWORD"))
-
-    print(
-        cli.template.render(
-            "./rbac/context.ldif.j2", ldap_config=env.vars.get("LDAP_CONFIG"), bind_password_hash=hashed_pwd
+    repo = get_repo()
+    print(env.vars.get("RBAC_SUBSTITUTIONS"))
+    dir = "./rbac"
+    prep_for_templating(dir)
+    hashed_pwd_admin_user = ldap3.utils.hashed.hashed(ldap3.HASHED_SALTED_SHA, env.secrets.get("LDAP_ADMIN_PASSWORD"))
+    files = [
+        file
+        for file in glob.glob(f"{dir}/**/*", recursive=True)
+        if Path(file).is_file() and Path(file).name.endswith(".ldif.j2")
+    ]
+    # print(files)
+    for file in files:
+        rendered_text = cli.template.render(
+            file,
+            ldap_config=env.vars.get("LDAP_CONFIG"),
+            bind_password_hash=hashed_pwd_admin_user,
+            secrets=env.secrets,
+            oasys_password=env.secrets.get("OASYS_PASSWORD"),
+            environment_name=env.vars.get("ENVIRONMENT_NAME"),
+            project_name=env.vars.get("PROJECT_NAME"),
         )
-    )
+        cli.template.save(rendered_text, file)

@@ -21,11 +21,12 @@ vars = {
     **{
         key.replace("VAR_", "").replace("_DICT", ""): ast.literal_eval(val) if "DICT" in key else val
         for key, val in dotenv_values(".vars").items()
+        if val is not None
     },  # load development variables
     **{
         key.replace("VAR_", "").replace("_DICT", ""): ast.literal_eval(val) if "DICT" in key else val
         for key, val in os.environ.items()
-        if key.startswith(("LDAP_", "DB_", "GH_", "VAR_"))
+        if key.startswith("VAR_") and val is not None
     },
     # load all other environment variables starting with LDAP_, DB_, GH_
 }
@@ -34,10 +35,11 @@ secrets = {
     **{
         key.replace("SECRET_", "").replace("_DICT", ""): ast.literal_eval(val) if "_DICT" in key else val
         for key, val in dotenv_values(".secrets").items()
+        if val is not None
     },
     **{
         key.replace("SECRET_", "").replace("_DICT", ""): ast.literal_eval(val) if "DICT" in key else val
         for key, val in os.environ.items()
-        if key.startswith("SECRET_") or key.startswith("SSM_")
+        if key.startswith("SECRET_") or key.startswith("SSM_") and val is not None
     },
 }
