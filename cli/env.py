@@ -32,7 +32,7 @@ vars = {
 # loads all environment variables starting with SECRET_ into a dictionary
 secrets = {
     **{
-        key.replace("_DICT", ""): ast.literal_eval(val) if "_DICT" in key else val
+        key.replace("SECRET_", "").replace("_DICT", ""): ast.literal_eval(val) if "_DICT" in key else val
         for key, val in dotenv_values(".secrets").items()
     },
     **{
