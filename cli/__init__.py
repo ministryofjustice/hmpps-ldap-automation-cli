@@ -1,5 +1,5 @@
 import click
-import cli.ldap.add_roles_to_username
+import cli.ldap.add_roles_to_username, cli.ldap.rbac
 
 from cli import git
 
@@ -18,14 +18,14 @@ def add_roles_to_users(user_ou, root_dn, user_role_list):
 
 
 @click.command()
-def git_test():
-    git.dl_test()
+def test():
+    cli.ldap.rbac.test()
 
 
 # from cli.ldap import test
 
 main_group.add_command(add_roles_to_users)
-main_group.add_command(git_test)
+main_group.add_command(test)
 
 if __name__ == "__main__":
     main_group()

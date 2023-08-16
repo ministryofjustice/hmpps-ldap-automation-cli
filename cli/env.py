@@ -16,11 +16,11 @@ from dotenv import dotenv_values
 
 vars = {
     **dotenv_values(".vars"),  # load development variables
-    **{key: val for key, val in os.environ.items() if key.startswith(('LDAP_', 'DB_', 'GH_'))}
+    **{key.replace("VAR_"): val for key, val in os.environ.items() if key.startswith(("LDAP_", "DB_", "GH_", "VAR_"))}
     # load all other environment variables starting with LDAP_, DB_, GH_
 }
 # loads all environment variables starting with SECRET_ into a dictionary
 secrets = {
     **dotenv_values(".secrets"),
-    **{key.replace("SECRET_"): val for key, val in os.environ.items() if key.startswith("SECRET_")}
+    **{key.replace("SECRET_"): val for key, val in os.environ.items() if key.startswith("SECRET_")},
 }
