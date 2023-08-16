@@ -19,7 +19,7 @@ import ast
 
 vars = {
     **{
-        key.replace("_DICT", ""): ast.literal_eval(val) if "DICT" in key else val
+        key.replace("VAR_", "").replace("_DICT", ""): ast.literal_eval(val) if "DICT" in key else val
         for key, val in dotenv_values(".vars").items()
     },  # load development variables
     **{
@@ -38,6 +38,6 @@ secrets = {
     **{
         key.replace("SECRET_", "").replace("_DICT", ""): ast.literal_eval(val) if "DICT" in key else val
         for key, val in os.environ.items()
-        if key.startswith("SECRET_")
+        if key.startswith("SECRET_") or key.startswith("SSM_")
     },
 }
