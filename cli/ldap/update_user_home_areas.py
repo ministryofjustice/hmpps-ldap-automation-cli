@@ -37,7 +37,12 @@ def update_user_home_areas(old_home_area, new_home_area):
         logging.info(f"Updating user home areas from {old_home_area} to {new_home_area}")
         ldap_connection = ldap_connect(config.ldap_host, config.ldap_user, config.ldap_password)
         ldap_connection.search("ou=Users,dc=moj,dc=com", f"(&(objectclass=NDUser)(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))")
+        
+        # Output records for debug purposes
         records = ldap_connection.response
         logging.info(len(records))
         for record in records:  
                 logging.info(record)
+
+        # Enter code here modify and delete LDAP entries as per the outcome of the native ansible-invoked LDAP commands above
+        #       But using the python package methods rather than constructing LDIFs
