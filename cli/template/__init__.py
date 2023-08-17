@@ -21,3 +21,4 @@ def save(rendered_text, template_path, rendered_dir="./rendered/"):
     file = Path(os.path.join(rendered_dir, template_path.replace(".j2", "")))
     file.touch(exist_ok=True)
     file.write_text(rendered_text)
+    return file

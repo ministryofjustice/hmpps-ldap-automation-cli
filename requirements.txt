@@ -7,3 +7,4 @@ GitPython
 pyjwt
 python-dotenv
 Jinja2
+git+https://github.com/abilian/ldif.git@4.2.0
