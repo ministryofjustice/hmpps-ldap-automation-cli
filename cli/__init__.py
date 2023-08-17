@@ -18,14 +18,15 @@ def add_roles_to_users(user_ou, root_dn, user_role_list):
 
 
 @click.command()
-def test():
-    cli.ldap.rbac.test()
+@click.option("--rbac-repo-tag", help="RBAC repo tag to use", default="master")
+def rbac_uplift(rbac_repo_tag):
+    cli.ldap.rbac.main(rbac_repo_tag)
 
 
 # from cli.ldap import test
 
 main_group.add_command(add_roles_to_users)
-main_group.add_command(test)
+main_group.add_command(rbac_uplift)
 
 if __name__ == "__main__":
     main_group()

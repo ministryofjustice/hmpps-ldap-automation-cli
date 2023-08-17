@@ -11,7 +11,7 @@ import cli.template
 from ldif import LDIFParser
 
 
-def get_repo():
+def get_repo(repo_tag="master"):
     app_id = env.vars.get("GH_APP_ID")
     private_key = env.vars.get("GH_PRIVATE_KEY")
     installation_id = env.vars.get("GH_INSTALLATION_ID")
@@ -19,7 +19,7 @@ def get_repo():
     url = "https://github.com/ministryofjustice/hmpps-ndelius-rbac.git"
     token = git.get_access_token(app_id, private_key, installation_id)
     try:
-        repo = git.get_repo(url, token=token, dest_name="rbac")
+        repo = git.get_repo(url, token=token, dest_name="rbac", branch_or_tag=repo_tag)
         return repo
     except Exception as e:
         log.exception(e)
@@ -64,15 +64,16 @@ def template_rbac(files):
 
 
 def context_ldif(rendered_files):
-    context_file = [file for file in rendered_files if "context" in file][0]
-    parser = LDIFParser(open(context_file, "rb"), strict=False)
-    for dn, record in parser.parse():
-        print("got entry record: %s" % dn)
-        print(record)
-        ldap_connection = ldap_connect(
-            env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
-        )
-        ldap_connection.add(dn, attributes=record)
+    context_file = [file for file in rendered_files if "context" in Path(file).name]
+    for file in context_file:
+        parser = LDIFParser(open(file, "rb"), strict=False)
+        for dn, record in parser.parse():
+            print("got entry record: %s" % dn)
+            print(record)
+            ldap_connection = ldap_connect(
+                env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+            )
+            ldap_connection.add(dn, attributes=record)
 
 
 def group_ldifs(rendered_files):
@@ -80,7 +81,7 @@ def group_ldifs(rendered_files):
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
     )
-    group_files = [file for file in rendered_files if "groups" in file]
+    group_files = [file for file in rendered_files if "groups" in Path(file).name]
     # loop through the group files
     for file in group_files:
         # parse the ldif into dn and record
@@ -99,7 +100,7 @@ def policy_ldifs(rendered_files):
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
     )
-    policy_files = [file for file in rendered_files if "policy" in file]
+    policy_files = [file for file in rendered_files if "policy" in Path(file).name]
 
     # first, delete the policies
     ldap_connection.delete("ou=Policies," + env.vars.get("LDAP_CONFIG").get("base_root"))
@@ -121,7 +122,7 @@ def role_ldifs(rendered_files):
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
     )
-    role_files = [file for file in rendered_files if "nd_role" in file]
+    role_files = [file for file in rendered_files if "nd_role" in Path(file).name]
 
     # first, delete the roles
     ldap_connection.delete("cn=ndRoleCatalogue," + env.vars.get("LDAP_CONFIG").get("base_users"))
@@ -150,7 +151,7 @@ def schema_ldifs(rendered_files):
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
     )
 
-    schema_files = [file for file in rendered_files if "delius.ldif" or "pwm.ldif" in file]
+    schema_files = [file for file in rendered_files if "delius.ldif" or "pwm.ldif" in Path(file).name]
 
     # loop through the schema files
     for file in schema_files:
@@ -169,7 +170,7 @@ def user_ldifs(rendered_files):
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
     )
-    user_files = [file for file in rendered_files if "-users" in file]
+    user_files = [file for file in rendered_files if "-users" in Path(file).name]
 
     # first, delete the users
     for file in user_files:
@@ -194,8 +195,8 @@ def user_ldifs(rendered_files):
             ldap_connection.add(dn, attributes=record)
 
 
-def test():
-    repo = get_repo()
+def main(rbac_repo_tag):
+    repo = get_repo(rbac_repo_tag)
     print(env.vars.get("RBAC_SUBSTITUTIONS"))
     dir = "./rbac"
 
@@ -206,11 +207,14 @@ def test():
     ]
 
     prep_for_templating(files)
-
-    ldap_adds = ["context.ldif"]
-    ldap_modifies = []
-
     rendered_files = template_rbac(files)
+    context_ldif(rendered_files)
+    policy_ldifs(rendered_files)
+    # schema_ldifs(files) probably not needed, but check!
+    role_ldifs(rendered_files)
+    group_ldifs(rendered_files)
+    user_ldifs(rendered_files)
+
     parser = LDIFParser(open("./rendered/rbac/context.ldif", "rb"), strict=False)
     for dn, record in parser.parse():
         print("got entry record: %s" % dn)
