@@ -94,6 +94,106 @@ def group_ldifs(rendered_files):
             ldap_connection.modify(dn, {"description": [(ldap3.MODIFY_REPLACE, record["description"])]})
 
 
+def policy_ldifs(rendered_files):
+    # connect to ldap
+    ldap_connection = ldap_connect(
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+    )
+    policy_files = [file for file in rendered_files if "policy" in file]
+
+    # first, delete the policies
+    ldap_connection.delete("ou=Policies," + env.vars.get("LDAP_CONFIG").get("base_root"))
+
+    # loop through the policy files
+    for file in policy_files:
+        # parse the ldif into dn and record
+        parser = LDIFParser(open(file, "rb"), strict=False)
+        # loop through the records
+        for dn, record in parser.parse():
+            print("got entry record: %s" % dn)
+            # print(record)
+            # add the record to ldap
+            ldap_connection.add(dn, attributes=record)
+
+
+def role_ldifs(rendered_files):
+    # connect to ldap
+    ldap_connection = ldap_connect(
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+    )
+    role_files = [file for file in rendered_files if "nd_role" in file]
+
+    # first, delete the roles
+    ldap_connection.delete("cn=ndRoleCatalogue," + env.vars.get("LDAP_CONFIG").get("base_users"))
+    ldap_connection.delete("cn=ndRoleGroups," + env.vars.get("LDAP_CONFIG").get("base_users"))
+
+    # ensure boolean values are Uppercase..
+    # (not yet implemented, probably not needed)
+
+    # loop through the role files
+    for file in role_files:
+        # parse the ldif into dn and record
+        parser = LDIFParser(open(file, "rb"), strict=False)
+        # loop through the records
+        for dn, record in parser.parse():
+            print("got entry record: %s" % dn)
+            # print(record)
+            # add the record to ldap
+            ldap_connection.add(dn, attributes=record)
+
+
+# not complete!!
+# see https://github.com/ministryofjustice/hmpps-delius-pipelines/blob/master/components/delius-core/playbooks/rbac/import_schemas.yml
+def schema_ldifs(rendered_files):
+    # connect to ldap
+    ldap_connection = ldap_connect(
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+    )
+
+    schema_files = [file for file in rendered_files if "delius.ldif" or "pwm.ldif" in file]
+
+    # loop through the schema files
+    for file in schema_files:
+        # parse the ldif into dn and record
+        parser = LDIFParser(open(file, "rb"), strict=False)
+        # loop through the records
+        for dn, record in parser.parse():
+            print("got entry record: %s" % dn)
+            # print(record)
+            # add the record to ldap
+            ldap_connection.add(dn, attributes=record)
+
+
+def user_ldifs(rendered_files):
+    # connect to ldap
+    ldap_connection = ldap_connect(
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+    )
+    user_files = [file for file in rendered_files if "-users" in file]
+
+    # first, delete the users
+    for file in user_files:
+        # parse the ldif into dn and record
+        parser = LDIFParser(open(file, "rb"), strict=False)
+        # loop through the records
+        for dn, record in parser.parse():
+            print("got entry record: %s" % dn)
+            # print(record)
+            # add the record to ldap
+            ldap_connection.delete(dn)
+
+    # loop through the user files
+    for file in user_files:
+        # parse the ldif into dn and record
+        parser = LDIFParser(open(file, "rb"), strict=False)
+        # loop through the records
+        for dn, record in parser.parse():
+            print("got entry record: %s" % dn)
+            # print(record)
+            # add the record to ldap
+            ldap_connection.add(dn, attributes=record)
+
+
 def test():
     repo = get_repo()
     print(env.vars.get("RBAC_SUBSTITUTIONS"))
@@ -102,7 +202,7 @@ def test():
     files = [
         file
         for file in glob.glob(f"{dir}/**/*", recursive=True)
-        if Path(file).is_file() and Path(file).name.endswith(".ldif.j2")
+        if Path(file).is_file() and Path(file).name.endswith(".ldif") or Path(file).name.endswith(".j2")
     ]
 
     prep_for_templating(files)
