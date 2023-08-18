@@ -28,7 +28,6 @@ vars = {
         for key, val in os.environ.items()
         if key.startswith("VAR_") and val is not None
     },
-    # load all other environment variables starting with LDAP_, DB_, GH_
 }
 # loads all environment variables starting with SECRET_ into a dictionary
 secrets = {

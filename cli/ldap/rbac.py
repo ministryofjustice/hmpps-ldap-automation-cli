@@ -73,6 +73,10 @@ def context_ldif(rendered_files):
                 env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
             )
             ldap_connection.add(dn, attributes=record)
+            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
+                raise Exception(f"Failed to add context {dn}, status: {ldap_connection.result['result']}")
 
 
 def group_ldifs(rendered_files):
@@ -94,6 +98,12 @@ def group_ldifs(rendered_files):
             if record.get("description"):
                 print("updating description")
                 ldap_connection.modify(dn, {"description": [(ldap3.MODIFY_REPLACE, record["description"])]})
+                if any(result not in [0, 68] for result in ldap_connection.result["result"]):
+                    log.debug(ldap_connection.result)
+                    log.debug(ldap_connection.response)
+                    raise Exception(
+                        f"Failed to update description for group {dn}, status: {ldap_connection.result['result']}"
+                    )
 
 
 def policy_ldifs(rendered_files):
@@ -116,6 +126,10 @@ def policy_ldifs(rendered_files):
             # print(record)
             # add the record to ldap
             ldap_connection.add(dn, attributes=record)
+            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
+                raise Exception(f"Failed to add policy {dn}, status: {ldap_connection.result['result']}")
 
 
 def role_ldifs(rendered_files):
@@ -142,6 +156,10 @@ def role_ldifs(rendered_files):
             # print(record)
             # add the record to ldap
             ldap_connection.add(dn, attributes=record)
+            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
+                raise Exception(f"Failed to add role {dn}, status: {ldap_connection.result['result']}")
 
 
 # not complete!!
@@ -164,6 +182,10 @@ def schema_ldifs(rendered_files):
             # print(record)
             # add the record to ldap
             ldap_connection.add(dn, attributes=record)
+            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
+                raise Exception(f"Failed to add schema {dn}, status: {ldap_connection.result['result']}")
 
 
 def user_ldifs(rendered_files):
@@ -183,6 +205,10 @@ def user_ldifs(rendered_files):
             # print(record)
             # add the record to ldap
             ldap_connection.delete(dn)
+            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
+                raise Exception(f"Failed to delete user {dn}, status: {ldap_connection.result['result']}")
 
     # loop through the user files
     for file in user_files:
@@ -194,6 +220,10 @@ def user_ldifs(rendered_files):
             # print(record)
             # add the record to ldap
             ldap_connection.add(dn, attributes=record)
+            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
+                raise Exception(f"Failed to add user {dn}, status: {ldap_connection.result['result']}")
 
 
 def main(rbac_repo_tag):
