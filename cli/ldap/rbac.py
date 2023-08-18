@@ -240,7 +240,7 @@ def main(rbac_repo_tag, clone_path="./rbac"):
     rendered_files = template_rbac(files)
     context_ldif(rendered_files)
     policy_ldifs(rendered_files)
-    # schema_ldifs(files) probably not needed, but check!
+    # schema_ldifs(files) probably not needed, but need to check!
     role_ldifs(rendered_files)
     group_ldifs(rendered_files)
     user_ldifs(rendered_files)
