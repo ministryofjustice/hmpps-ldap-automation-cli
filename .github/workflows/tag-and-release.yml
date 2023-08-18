@@ -34,6 +34,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         WITH_V: true
         PRE_RELEASE_NAME: dev
+        PRE_RELEASE_BRANCHES: dev
     - name: release or prerelease
       id: release_type
       run: |
