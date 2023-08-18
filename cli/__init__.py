@@ -2,6 +2,7 @@ import click
 import cli.ldap.add_roles_to_username, cli.ldap.rbac
 
 from cli import git
+import cli.env
 
 
 @click.group()

@@ -53,7 +53,6 @@ def template_rbac(files):
             ldap_config=env.vars.get("LDAP_CONFIG"),
             bind_password_hash=hashed_pwd_admin_user,
             secrets=env.secrets,
-            ssm_prefix=env.vars.get("SSM_PREFIX"),
             oasys_password=env.secrets.get("OASYS_PASSWORD"),
             environment_name=env.vars.get("ENVIRONMENT_NAME"),
             project_name=env.vars.get("PROJECT_NAME"),
@@ -71,7 +70,7 @@ def context_ldif(rendered_files):
             print("got entry record: %s" % dn)
             print(record)
             ldap_connection = ldap_connect(
-                env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+                env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
             )
             ldap_connection.add(dn, attributes=record)
 
@@ -79,7 +78,7 @@ def context_ldif(rendered_files):
 def group_ldifs(rendered_files):
     # connect to ldap
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
     group_files = [file for file in rendered_files if "groups" in Path(file).name]
     # loop through the group files
@@ -89,16 +88,18 @@ def group_ldifs(rendered_files):
         # loop through the records
         for dn, record in parser.parse():
             print("got entry record: %s" % dn)
-            # print(record)
+            print(record)
             # add the record to ldap
             ldap_connection.add(dn, attributes=record)
-            ldap_connection.modify(dn, {"description": [(ldap3.MODIFY_REPLACE, record["description"])]})
+            if record.get("description"):
+                print("updating description")
+                ldap_connection.modify(dn, {"description": [(ldap3.MODIFY_REPLACE, record["description"])]})
 
 
 def policy_ldifs(rendered_files):
     # connect to ldap
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
     policy_files = [file for file in rendered_files if "policy" in Path(file).name]
 
@@ -120,7 +121,7 @@ def policy_ldifs(rendered_files):
 def role_ldifs(rendered_files):
     # connect to ldap
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
     role_files = [file for file in rendered_files if "nd_role" in Path(file).name]
 
@@ -148,7 +149,7 @@ def role_ldifs(rendered_files):
 def schema_ldifs(rendered_files):
     # connect to ldap
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
 
     schema_files = [file for file in rendered_files if "delius.ldif" or "pwm.ldif" in Path(file).name]
@@ -168,7 +169,7 @@ def schema_ldifs(rendered_files):
 def user_ldifs(rendered_files):
     # connect to ldap
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
     user_files = [file for file in rendered_files if "-users" in Path(file).name]
 
@@ -220,6 +221,6 @@ def main(rbac_repo_tag):
         print("got entry record: %s" % dn)
         print(record)
         ldap_connection = ldap_connect(
-            env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_PASSWORD")
+            env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
         ldap_connection.add(dn, attributes=record)
