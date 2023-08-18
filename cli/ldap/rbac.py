@@ -226,14 +226,13 @@ def user_ldifs(rendered_files):
                 raise Exception(f"Failed to add user {dn}, status: {ldap_connection.result['result']}")
 
 
-def main(rbac_repo_tag):
+def main(rbac_repo_tag, clone_path="./rbac"):
     repo = get_repo(rbac_repo_tag)
     print(env.vars.get("RBAC_SUBSTITUTIONS"))
-    dir = "./rbac"
 
     files = [
         file
-        for file in glob.glob(f"{dir}/**/*", recursive=True)
+        for file in glob.glob(f"{clone_path}/**/*", recursive=True)
         if Path(file).is_file() and Path(file).name.endswith(".ldif") or Path(file).name.endswith(".j2")
     ]
 
@@ -245,12 +244,3 @@ def main(rbac_repo_tag):
     role_ldifs(rendered_files)
     group_ldifs(rendered_files)
     user_ldifs(rendered_files)
-
-    parser = LDIFParser(open("./rendered/rbac/context.ldif", "rb"), strict=False)
-    for dn, record in parser.parse():
-        print("got entry record: %s" % dn)
-        print(record)
-        ldap_connection = ldap_connect(
-            env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
-        )
-        ldap_connection.add(dn, attributes=record)
