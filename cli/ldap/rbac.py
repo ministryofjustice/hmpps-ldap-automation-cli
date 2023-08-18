@@ -143,7 +143,7 @@ def role_ldifs(rendered_files):
     ldap_connection.delete("cn=ndRoleCatalogue," + env.vars.get("LDAP_CONFIG").get("base_users"))
     ldap_connection.delete("cn=ndRoleGroups," + env.vars.get("LDAP_CONFIG").get("base_users"))
 
-    # ensure boolean values are Uppercase..
+    # ensure boolean values are Uppercase.. this comes from the ansible yml
     # (not yet implemented, probably not needed)
 
     # loop through the role files
