@@ -6,13 +6,12 @@ import ldap3
 from ldap3 import MODIFY_REPLACE
 
 
-def update_user_home_areas(old_home_area, new_home_area, attribute="userHomeArea"):
+def update_user_home_areas(old_home_area, new_home_area, base_dn, attribute="userHomeArea", object_class="NDUser"):
     logging.info(f"Updating user home areas from {old_home_area} to {new_home_area}")
     conn = ldap_connect(config.ldap_host, config.ldap_user, config.ldap_password)
 
-    base_dn = "ou=Users,dc=moj,dc=com"  # change this
     search_filter = (
-        f"(&(objectclass=NDUser)(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))"  # and this
+        f"(&(objectclass={object_class})(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))"
     )
     conn.search(base_dn, search_filter, attributes=[attribute])
 

@@ -1,5 +1,5 @@
 import click
-import cli.ldap.add_roles_to_username, cli.ldap.rbac,cli.ldap.update_user_home_areas
+import cli.ldap.add_roles_to_username, cli.ldap.rbac, cli.ldap.update_user_home_areas
 
 from cli import git
 import cli.env
@@ -8,7 +8,8 @@ import cli.env
 @click.group()
 def main_group():
     pass
-  
+
+
 @click.command()
 @click.option("--user-ou", help="OU to add users to, defaults to ou=Users", default="ou=Users")
 @click.option("--root-dn", help="Root DN to add users to", default="dc=moj,dc=com")
@@ -16,13 +17,16 @@ def main_group():
 def add_roles_to_users(user_ou, root_dn, user_role_list):
     cli.ldap.add_roles_to_username.process_user_roles_list(user_role_list, user_ou, root_dn)
 
+
 # Update user home area
 @click.command()
 @click.option("--old-home-area", help="name of old home area")
 @click.option("--new-home-area", help="name of new home area")
 def update_user_home_areas(old_home_area, new_home_area):
-   cli.ldap.update_user_home_areas.update_user_home_areas(old_home_area, new_home_area)
-    
+    base_dn = env.vars.get("LDAP_CONFIG").get("base_users")
+    cli.ldap.update_user_home_areas.update_user_home_areas(old_home_area, new_home_area, base_dn)
+
+
 @click.command()
 @click.option("--rbac-repo-tag", help="RBAC repo tag to use", default="master")
 def rbac_uplift(rbac_repo_tag):
