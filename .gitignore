@@ -164,6 +164,7 @@ cython_debug/
 .secrets
 .vars
 /rbac
+/rendered
 
 *.ldif
 *.ldif.j2
