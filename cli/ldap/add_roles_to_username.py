@@ -1,16 +1,22 @@
-import logging
-
-from cli import config
+from cli.logging import log
+from cli import env
 from cli.ldap import ldap_connect
 
 
 def parse_user_role_list(user_role_list):
+    # The format of the list should be a pipe separated list of username and role lists,
+    # where the username and role list is separated by a comma character,
+    # and the roles are separated by a semi-colon:
+    # username1,role1;role2;role3|username2,role1;role2
+
     return {user.split(",")[0]: user.split(",")[1].split(";") for user in user_role_list.split("|")}
 
 
 def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
-    logging.info(f"Adding roles {roles} to user {username}")
-    ldap_connection = ldap_connect(config.ldap_host, config.ldap_user, config.ldap_password)
+    log.info(f"Adding roles {roles} to user {username}")
+    ldap_connection = ldap_connect(
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+    )
     for role in roles:
         ldap_connection.add(
             f"cn={role},cn={username},{user_ou},{root_dn}",
@@ -30,6 +36,7 @@ def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=co
 
 
 def process_user_roles_list(user_role_list, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
+    log.info(f"secrets: {env.secrets}")
     user_roles = parse_user_role_list(user_role_list)
     for user, roles in user_roles.items():
         add_roles_to_user(user, roles, user_ou, root_dn)
