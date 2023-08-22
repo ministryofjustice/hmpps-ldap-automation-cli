@@ -20,8 +20,8 @@ def add_roles_to_users(user_ou, root_dn, user_role_list):
 
 # Update user home area
 @click.command()
-@click.option("--old-home-area", help="name of old home area")
-@click.option("--new-home-area", help="name of new home area")
+@click.option("-o", "--old-home-area", help="name of old home area", required=True)
+@click.option("-n", "--new-home-area", help="name of new home area", required=True)
 def update_user_home_areas(old_home_area, new_home_area):
     base_dn = env.vars.get("LDAP_CONFIG").get("base_users")
     cli.ldap.update_user_home_areas.update_user_home_areas(old_home_area, new_home_area, base_dn)
