@@ -2,47 +2,26 @@ import logging
 
 from cli import config
 from cli.ldap import ldap_connect
+import ldap3
+from ldap3 import MODIFY_REPLACE
 
 
-##
-# Original ansible to replicate then remove
-##
-        # - name: Search for matching users (Home Area=Old value, Active)
-        #   shell: >
-        #     ldapsearch -LLL -H ldap:// -D cn=root,dc=moj,dc=com -w "${ldap_admin_password}" -b {{ user_dn }} -s one \
-        #     '(&(objectclass=NDUser)(userHomeArea={{ old_home_area }})(!(cn={{ old_home_area }}))(!(endDate=*)))' dn \
-        #     | sed 's/^$/changetype: modify\nreplace: userHomeArea\nuserHomeArea: {{ new_home_area }}\n/' \
-        #     > {{ workspace }}/update.ldif
-        #   environment:
-        #     ldap_admin_password: '{{ ldap_admin_password.stdout }}'
-
-        # - name: Create additional LDIF for deleting home areas (required due to LDAP issue causing old values to get "stuck")
-        #   shell: >
-        #     cat {{ workspace }}/update.ldif \
-        #     | sed 's/replace: userHomeArea/delete: userHomeArea/' \
-        #     | sed 's/userHomeArea: {{ new_home_area }}/userHomeArea: {{ old_home_area }}/' \
-        #     > {{ workspace }}/delete.ldif
-
-        # - name: Apply changes
-        #   shell: ldapmodify -Y EXTERNAL -H ldapi:// -c -f {{ workspace }}/update.ldif 2>&1 | tee {{ workspace }}/update.log
-
-        # - name: Restart LDAP (required due to LDAP issue causing old values to get "stuck")
-        #   shell: systemctl restart slapd
-
-        # - name: Force deletion of old home area (required due to LDAP issue causing old values to get "stuck")
-        #   shell: ldapmodify -Y EXTERNAL -H ldapi:// -c -f {{ workspace }}/delete.ldif 2>&1 | tee {{ workspace }}/delete.log
-
-
-def update_user_home_areas(old_home_area, new_home_area):
+def update_user_home_areas(old_home_area, new_home_area, attribute="userHomeArea"):
         logging.info(f"Updating user home areas from {old_home_area} to {new_home_area}")
-        ldap_connection = ldap_connect(config.ldap_host, config.ldap_user, config.ldap_password)
-        ldap_connection.search("ou=Users,dc=moj,dc=com", f"(&(objectclass=NDUser)(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))")
-        
-        # Output records for debug purposes
-        records = ldap_connection.response
-        logging.info(len(records))
-        for record in records:  
-                logging.info(record)
+        conn = ldap_connect(config.ldap_host, config.ldap_user, config.ldap_password)
 
-        # Enter code here modify and delete LDAP entries as per the outcome of the native ansible-invoked LDAP commands above
-        #       But using the python package methods rather than constructing LDIFs
+        base_dn = "ou=Users,dc=moj,dc=com" # change this
+        search_filter = f"'(&(objectclass=NDUser)(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))'" # and this
+        conn.search(base_dn, search_filter, attributes=[attribute])
+
+        # Iterate through the search results and update the attribute
+        for entry in conn.entries:
+            dn = entry.entry_dn
+            changes = {attribute: [(MODIFY_REPLACE, [new_home_area])]}
+            conn.modify(dn, changes)
+
+            # Check if the modification was successful
+            if conn.result['result'] == 0:
+                print(f'Successfully updated {attribute} for {dn}')
+            else:
+                print(f'Failed to update {attribute} for {dn}: {conn.result}')
