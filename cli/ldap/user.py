@@ -30,10 +30,27 @@ def change_home_areas(old_home_area, new_home_area, user_ou, root_dn, attribute=
             log.error(f"Failed to update {attribute} for {dn}: {ldap_connection.result}")
 
 
-def update_roles(old_role, new_role, user_ou, root_dn, user_filter="(objectclass=*)", role_filter="(objectclass=*)"):
-    log.info(f"Updating user roles from {old_role} to {new_role}")
-    ldap_connection = ldap_connect(
+def update_roles(roles, user_ou, root_dn, user_filter="(objectclass=*)"):
+    ldap_connection_user_filter = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
 
-    # Search for users with the old role
+    # Search for users matching the user_filter
+    ldap_connection_user_filter.search(",".join([user_ou, root_dn]), user_filter, attributes=["cn"])
+    users = [entry.entry_dn for entry in ldap_connection_user_filter.entries]
+
+    # create role filter
+    if len(roles) > 0:
+        role_filter = f"(&(objectclass=NDRoleAssociation)({['|(cn=' + role + ')' for role in roles]}))"
+    else:
+        role_filter = "(&(objectclass=NDRoleAssociation)(cn=*))"
+
+    # Search for roles matching the role_filter
+    ldap_connection_role_filter = ldap_connect(
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+    )
+    ldap_connection_role_filter.search(",".join([user_ou, root_dn]), role_filter, attributes=["dn"])
+    roles = [entry.entry_dn for entry in ldap_connection_role_filter.entries]
+
+    # generate a list of matches in roles and users
+    common_entries = set(users) & set(roles)
