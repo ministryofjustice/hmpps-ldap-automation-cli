@@ -28,7 +28,7 @@ def update_user_home_areas(old_home_area, new_home_area):
 
 
 @click.command()
-@click.option("-tag", "--rbac-repo-tag", help="RBAC repo tag to use", default="master")
+@click.option("-t", "--rbac-repo-tag", help="RBAC repo tag to use", default="master")
 def rbac_uplift(rbac_repo_tag):
     cli.ldap.rbac.main(rbac_repo_tag)
 
