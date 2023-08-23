@@ -16,7 +16,7 @@ class SensitiveFormatter(logging.Formatter):
         return self._filter(original)
 
 
-if cli.env.vars.get("DEBUG") == "true":
+if cli.env.vars.get("DEBUG") == 1:
     logging.basicConfig(level=logging.DEBUG)
 else:
     logging.basicConfig(level=logging.INFO)
