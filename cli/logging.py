@@ -1,5 +1,5 @@
 import logging
-from cli.env import secrets
+import cli.env
 
 
 class SensitiveFormatter(logging.Formatter):
@@ -7,7 +7,7 @@ class SensitiveFormatter(logging.Formatter):
 
     @staticmethod
     def _filter(s):
-        secrets_set = set(secrets.values())
+        secrets_set = set(cli.env.secrets.values())
         redacted = " ".join([s.replace(secret, "*" * len(secret)) for secret in secrets_set if secret is not None])
         return redacted
 
@@ -16,7 +16,10 @@ class SensitiveFormatter(logging.Formatter):
         return self._filter(original)
 
 
-logging.basicConfig(level=logging.DEBUG)
+if cli.env.vars.get("DEBUG") == 1:
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 for handler in log.root.handlers:
     handler.setFormatter(SensitiveFormatter())
