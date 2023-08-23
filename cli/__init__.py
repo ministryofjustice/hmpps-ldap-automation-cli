@@ -1,5 +1,5 @@
 import click
-import cli.ldap.add_roles_to_username, cli.ldap.rbac, cli.ldap.update_user_home_areas
+import cli.ldap.add_roles_to_username, cli.ldap.rbac, cli.ldap.user
 
 from cli import git
 import cli.env
@@ -22,9 +22,30 @@ def add_roles_to_users(user_ou, root_dn, user_role_list):
 @click.command()
 @click.option("-o", "--old-home-area", help="name of old home area", required=True)
 @click.option("-n", "--new-home-area", help="name of new home area", required=True)
-def update_user_home_areas(old_home_area, new_home_area):
-    base_dn = env.vars.get("LDAP_CONFIG").get("base_users")
-    cli.ldap.update_user_home_areas.update_user_home_areas(old_home_area, new_home_area, base_dn)
+@click.option("-u", "--user-ou", help="OU to add users to, defaults to ou=Users", default="ou=Users")
+@click.option("-r", "--root-dn", help="Root DN to add users to, defaults to dc=moj,dc=com", default="dc=moj,dc=com")
+def update_user_home_areas(old_home_area, new_home_area, user_ou, root_dn):
+    cli.ldap.user.change_home_areas(old_home_area, new_home_area, user_ou, root_dn)
+
+
+# Update user roles
+@click.command()
+@click.option("-o", "--old-role", help="name of old role", required=True)
+@click.option("-n", "--new-role", help="name of new role", required=True)
+@click.option("-u", "--user-ou", help="OU to add users to, defaults to ou=Users", default="ou=Users")
+@click.option("-r", "--root-dn", help="Root DN to add users to, defaults to dc=moj,dc=com", default="dc=moj,dc=com")
+@click.option("--add", help="Add role to users", is_flag=True)
+@click.option("--remove", help="Remove role from users", is_flag=True)
+def update_user_roles(old_role, new_role, user_ou, root_dn):
+    cli.ldap.user.update_roles(old_role, new_role, user_ou, root_dn)
+
+
+# Update user role notes
+# @click.command()
+# @click.option("--user-ou", help="OU to add users to, defaults to ou=Users", default="ou=Users")
+# @click.option("--root-dn", help="Root DN to add users to, defaults to dc=moj,dc=com", default="dc=moj,dc=com")
+# def update_user_roles(user_ou, root_dn):
+#     cli.ldap.user.update_roles_notes(old_role, new_role, user_ou, root_dn)
 
 
 @click.command()
