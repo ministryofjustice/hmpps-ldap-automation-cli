@@ -31,7 +31,16 @@ def change_home_areas(old_home_area, new_home_area, user_ou, root_dn, attribute=
             log.error(f"Failed to update {attribute} for {dn}: {ldap_connection.result}")
 
 
-def update_roles(roles, user_ou, root_dn, add, remove, user_filter="(objectclass=*)"):
+def update_roles(
+    roles,
+    user_ou,
+    root_dn,
+    add,
+    remove,
+    update_notes,
+    user_notes="User roles updated by Delius Script",
+    user_filter="(objectclass=*)",
+):
     ldap_connection_user_filter = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
@@ -83,9 +92,23 @@ def update_roles(roles, user_ou, root_dn, add, remove, user_filter="(objectclass
                 attributes={
                     "cn": pair[1],
                     "aliasedObjectName": f"cn={pair[1]},cn=ndRoleCatalogue,{user_ou},{root_dn}",
+                    "objectClass": ["NDRoleAssociation", "alias", "top"],
                 },
             )
+            log.info(f"Successfully added role '{pair[1]}' to user '{pair[0]}'")
         elif remove:
             ldap_connection_action.delete(f"cn={pair[1]},cn={pair[0]},{user_ou},{root_dn}")
+            log.info(f"Successfully removed role '{pair[1]}' from user '{pair[0]}'")
         else:
             log.error("No action specified")
+
+    if update_notes:
+        with oracledb.connect(**connection_config) as connection:
+            cursor = connection.cursor()
+        for user in matched_users:
+            update_sql = f"UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)"
+            insert_sql = f"INSERT INTO USER_NOTE (USER_NOTE_ID, USER_ID, LAST_UPDATED_USER_ID, LAST_UPDATED_DATETIME, NOTES) SELECT user_note_id_seq.nextval, USER_ID, 4, sysdate, :2 FROM USER_ WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)"
+            cursor.execute(update_sql, (user,))
+            cursor.execute(insert_sql, (user, user_notes))
+
+        connection.commit()

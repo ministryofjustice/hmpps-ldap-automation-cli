@@ -31,12 +31,14 @@ def update_user_home_areas(old_home_area, new_home_area, user_ou, root_dn):
 # Update user roles
 @click.command()
 @click.argument("roles", required=True)
+@click.argument("user-notes", required=False)
 @click.option("-u", "--user-ou", help="OU to add users to, defaults to ou=Users", default="ou=Users")
 @click.option("-r", "--root-dn", help="Root DN to add users to, defaults to dc=moj,dc=com", default="dc=moj,dc=com")
 @click.option("--add", help="Add role to users", is_flag=True)
 @click.option("--remove", help="Remove role from users", is_flag=True)
-def update_user_roles(roles, user_ou, root_dn, add, remove):
-    cli.ldap.user.update_roles(roles, user_ou, root_dn, add, remove)
+@click.option("--update-notes", help="Remove role from users", is_flag=True)
+def update_user_roles(roles, user_ou, root_dn, add, remove, update_notes, user_notes):
+    cli.ldap.user.update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_notes=user_notes)
 
 
 # Update user role notes
