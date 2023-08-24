@@ -15,7 +15,7 @@ def main_group():
 @click.option("-r", "--root-dn", help="Root DN to add users to", default="dc=moj,dc=com")
 @click.argument("user-role-list", required=True)
 def add_roles_to_users(user_ou, root_dn, user_role_list):
-    cli.ldap.add_roles_to_username.process_user_roles_list(user_role_list, user_ou, root_dn)
+    cli.ldap.user.process_user_roles_list(user_role_list, user_ou, root_dn)
 
 
 # Update user home area
