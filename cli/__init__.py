@@ -41,14 +41,6 @@ def update_user_roles(roles, user_ou, root_dn, add, remove, update_notes, user_n
     cli.ldap.user.update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_notes=user_notes)
 
 
-# Update user role notes
-# @click.command()
-# @click.option("--user-ou", help="OU to add users to, defaults to ou=Users", default="ou=Users")
-# @click.option("--root-dn", help="Root DN to add users to, defaults to dc=moj,dc=com", default="dc=moj,dc=com")
-# def update_user_roles(user_ou, root_dn):
-#     cli.ldap.user.update_roles_notes(old_role, new_role, user_ou, root_dn)
-
-
 @click.command()
 @click.option("-t", "--rbac-repo-tag", help="RBAC repo tag to use", default="master")
 def rbac_uplift(rbac_repo_tag):

@@ -15,5 +15,5 @@ def connection():
         log.debug("Created database connection successfully")
         return conn
     except Exception as e:
-        log.exeption(e)
+        log.exception(e)
         raise e
