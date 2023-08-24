@@ -80,7 +80,6 @@ def update_roles(roles, user_ou, root_dn, add, remove, user_filter="(objectclass
     cartesian_product = [(user, role) for user in matched_users for role in roles]
     print(cartesian_product)
 
-
     ldap_connection_action = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
@@ -88,14 +87,13 @@ def update_roles(roles, user_ou, root_dn, add, remove, user_filter="(objectclass
     for pair in cartesian_product:
         if add:
             ldap_connection_action.add(
-    f"cn={pair[1]},cn={pair[0]},{user_ou},{root_dn}",
-    attributes={
-        "cn": pair[1],
-        "aliasedObjectName": f"cn={pair[1]},cn=ndRoleCatalogue,{user_ou},{root_dn}",
-    },
-)
-
+                f"cn={pair[1]},cn={pair[0]},{user_ou},{root_dn}",
+                attributes={
+                    "cn": pair[1],
+                    "aliasedObjectName": f"cn={pair[1]},cn=ndRoleCatalogue,{user_ou},{root_dn}",
+                },
+            )
         elif remove:
-
+            ldap_connection_action.delete(f"cn={pair[1]},cn={pair[0]},{user_ou},{root_dn}")
         else:
             log.error("No action specified")
