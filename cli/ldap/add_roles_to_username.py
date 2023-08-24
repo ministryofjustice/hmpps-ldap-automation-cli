@@ -22,7 +22,7 @@ def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=co
             f"cn={role},cn={username},{user_ou},{root_dn}",
             attributes={
                 "objectClass": ["NDRoleAssociation", "alias"],
-                "aliasedObjectName": f"cn={role},cn={username},cn=ndRoleCatalogue,{root_dn}",
+                "aliasedObjectName": f"cn={role},cn={username},cn=ndRoleCatalogue,{user_ou},{root_dn}",
             },
         )
         if ldap_connection.result["result"] == 0:
