@@ -6,6 +6,8 @@ from cli import env
 from cli.ldap import ldap_connect
 from ldap3 import MODIFY_REPLACE, SUBTREE
 
+import cli.database
+
 
 def change_home_areas(old_home_area, new_home_area, user_ou, root_dn, attribute="userHomeArea", object_class="NDUser"):
     log.info(f"Updating user home areas from {old_home_area} to {new_home_area}")
@@ -103,12 +105,18 @@ def update_roles(
             log.error("No action specified")
 
     if update_notes:
-        with oracledb.connect(**connection_config) as connection:
+        with cli.database.connection() as connection:
             cursor = connection.cursor()
+            log.debug("Created database cursor successfully")
         for user in matched_users:
-            update_sql = f"UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)"
-            insert_sql = f"INSERT INTO USER_NOTE (USER_NOTE_ID, USER_ID, LAST_UPDATED_USER_ID, LAST_UPDATED_DATETIME, NOTES) SELECT user_note_id_seq.nextval, USER_ID, 4, sysdate, :2 FROM USER_ WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)"
-            cursor.execute(update_sql, (user,))
-            cursor.execute(insert_sql, (user, user_notes))
-
+            try:
+                update_sql = f"UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)"
+                insert_sql = f"INSERT INTO USER_NOTE (USER_NOTE_ID, USER_ID, LAST_UPDATED_USER_ID, LAST_UPDATED_DATETIME, NOTES) SELECT user_note_id_seq.nextval, USER_ID, 4, sysdate, :2 FROM USER_ WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)"
+                cursor.execute(update_sql, (user,))
+                cursor.execute(insert_sql, (user, user_notes))
+                log.info(f"Updated notes for user {user}")
+            except:
+                log.exception(f"Failed to update notes for user {user}")
         connection.commit()
+        log.info("Committed changes to database successfully")
+        connection.close()
