@@ -39,7 +39,6 @@ def update_roles(roles, user_ou, root_dn, add, remove, user_filter="(objectclass
     # # Search for users matching the user_filter
     ldap_connection_user_filter.search(",".join([user_ou, root_dn]), user_filter, attributes=["cn"])
     users_found = sorted([entry.cn.value for entry in ldap_connection_user_filter.entries if entry.cn.value])
-    print("users_found", users_found)
 
     ldap_connection_user_filter.unbind()
 
@@ -71,14 +70,7 @@ def update_roles(roles, user_ou, root_dn, add, remove, user_filter="(objectclass
     # generate a list of matches in roles and users
     matched_users = set(users_found) & set(roles_found)
 
-    print(users_found)
-
-    print(roles_found)
-
-    print(matched_users)
-
     cartesian_product = [(user, role) for user in matched_users for role in roles]
-    print(cartesian_product)
 
     ldap_connection_action = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
