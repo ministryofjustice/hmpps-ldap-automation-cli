@@ -1,12 +1,13 @@
 import ldap
 
-from cli.logging import log
+from logger import log
 from cli import env
 
 from cli.ldap import ldap_connect
 from ldap3 import MODIFY_REPLACE, SUBTREE
 
 import cli.database
+from itertools import product
 
 
 #########################################
@@ -93,7 +94,8 @@ def update_roles(
     remove,
     update_notes,
     user_notes="User roles updated by Delius Script",
-    user_filter="(objectclass=*)",
+    user_filter="(userSector=*)",
+    role_filter="*",
 ):
     ldap_connection_user_filter = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
@@ -102,16 +104,19 @@ def update_roles(
     # # Search for users matching the user_filter
     ldap_connection_user_filter.search(",".join([user_ou, root_dn]), user_filter, attributes=["cn"])
     users_found = sorted([entry.cn.value for entry in ldap_connection_user_filter.entries if entry.cn.value])
-
+    print("users found from user filter", users_found)
     ldap_connection_user_filter.unbind()
 
+    roles_filter_list = role_filter.split(",")
     roles = roles.split(",")
 
     # create role filter
-    if len(roles) > 0:
-        role_filter = f"(&(objectclass=NDRoleAssociation)(|{''.join(['(cn=' + role + ')' for role in roles])}))"
+    if len(roles_filter_list) > 0:
+        full_role_filter = (
+            f"(&(objectclass=NDRoleAssociation)(|{''.join(['(cn=' + role + ')' for role in roles_filter_list])}))"
+        )
     else:
-        role_filter = "(&(objectclass=NDRoleAssociation)(cn=*))"
+        full_role_filter = "(&(objectclass=NDRoleAssociation)(cn=*))"
 
     # Search for roles matching the role_filter
     ldap_connection_role_filter = ldap_connect(
@@ -120,42 +125,50 @@ def update_roles(
 
     ldap_connection_role_filter.search(
         ",".join([user_ou, root_dn]),
-        role_filter,
+        full_role_filter,
         attributes=["cn"],
         dereference_aliases=ldap.DEREF_NEVER,
     )
     roles_found = sorted(
         list(set([entry.entry_dn.split(",")[1].split("=")[1] for entry in ldap_connection_role_filter.entries]))
     )
+    print("users found from roles filter", roles_found)
 
     ldap_connection_role_filter.unbind()
 
     # generate a list of matches in roles and users
     matched_users = set(users_found) & set(roles_found)
+    print("matched users", matched_users)
 
-    cartesian_product = [(user, role) for user in matched_users for role in roles]
+    # cartesian_product = [(user, role) for user in matched_users for role in roles]
+
+    cartesian_product = list(product(matched_users, roles))
+    print(cartesian_product)
 
     ldap_connection_action = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
+    log.info("test")
 
-    for pair in cartesian_product:
+    for item in cartesian_product:
+        print(item)
         if add:
             ldap_connection_action.add(
-                f"cn={pair[1]},cn={pair[0]},{user_ou},{root_dn}",
+                f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}",
                 attributes={
-                    "cn": pair[1],
-                    "aliasedObjectName": f"cn={pair[1]},cn=ndRoleCatalogue,{user_ou},{root_dn}",
+                    "cn": item[1],
+                    "aliasedObjectName": f"cn={item[1]},cn=ndRoleCatalogue,{user_ou},{root_dn}",
                     "objectClass": ["NDRoleAssociation", "alias", "top"],
                 },
             )
-            log.info(f"Successfully added role '{pair[1]}' to user '{pair[0]}'")
+            log.info(f"Successfully added role '{item[1]}' to user '{item[0]}'")
+            log.info(ldap_connection_action.result["result"])
         elif remove:
-            ldap_connection_action.delete(f"cn={pair[1]},cn={pair[0]},{user_ou},{root_dn}")
-            log.info(f"Successfully removed role '{pair[1]}' from user '{pair[0]}'")
+            ldap_connection_action.delete(f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}")
+            log.info(f"Successfully removed role '{item[1]}' from user '{item[0]}'")
         else:
             log.error("No action specified")
-
+    log.info("test2")
     if update_notes:
         with cli.database.connection() as connection:
             cursor = connection.cursor()

@@ -5,7 +5,7 @@ from cli.ldap import ldap_connect
 from cli import env
 import cli.git as git
 import glob
-from cli.logging import log
+from logger import log
 from pathlib import Path
 import cli.template
 from ldif import LDIFParser

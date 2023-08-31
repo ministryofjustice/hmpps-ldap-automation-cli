@@ -1,6 +1,6 @@
 import oracledb
 import cli.env
-from cli.logging import log
+from logger import log
 
 connection_config = {
     "user": cli.env.vars.get("DB_USER"),

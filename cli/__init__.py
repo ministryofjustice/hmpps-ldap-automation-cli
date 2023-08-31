@@ -1,5 +1,6 @@
 import click
-import cli.ldap.add_roles_to_username, cli.ldap.rbac, cli.ldap.user
+import cli.ldap.rbac, cli.ldap.user
+import logger
 
 from cli import git
 import cli.env
@@ -37,8 +38,26 @@ def update_user_home_areas(old_home_area, new_home_area, user_ou, root_dn):
 @click.option("--add", help="Add role to users", is_flag=True)
 @click.option("--remove", help="Remove role from users", is_flag=True)
 @click.option("--update-notes", help="Remove role from users", is_flag=True)
-def update_user_roles(roles, user_ou, root_dn, add, remove, update_notes, user_notes):
-    cli.ldap.user.update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_notes=user_notes)
+@click.option(
+    "-rf",
+    "--role-filter",
+    help='Comma seperated string to generate roles filter from eg "role1,role2,role3"',
+    required=False,
+    default="*",
+)
+@click.option("-uf", "--user-filter", help="Filter to find users", required=False, default="(userSector=*)")
+def update_user_roles(roles, user_ou, root_dn, add, remove, update_notes, user_notes, user_filter, role_filter):
+    cli.ldap.user.update_roles(
+        roles,
+        user_ou,
+        root_dn,
+        add,
+        remove,
+        update_notes,
+        user_notes=user_notes,
+        user_filter=user_filter,
+        role_filter=role_filter,
+    )
 
 
 @click.command()
@@ -53,6 +72,8 @@ main_group.add_command(add_roles_to_users)
 main_group.add_command(rbac_uplift)
 main_group.add_command(update_user_home_areas)
 main_group.add_command(update_user_roles)
+
+logger.configure_logging()
 
 if __name__ == "__main__":
     main_group()
