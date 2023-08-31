@@ -23,7 +23,7 @@ def configure_logging():
 
     print("configure_logging")
     """Configure logging based on environment variables."""
-    format = cli.env.vars.get("LOG_FORMAT") or "%(asctime)s - %(levelname)s - %(module)s %(message)s"
+    format = cli.env.vars.get("LOG_FORMAT") or "%(asctime)s - %(levelname)s: %(message)s"
     datefmt = cli.env.vars.get("LOG_DATE_FORMAT") or "%Y-%m-%d %H:%M:%S"
 
     log = logging.getLogger(__name__)

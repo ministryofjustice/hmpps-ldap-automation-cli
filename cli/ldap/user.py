@@ -148,10 +148,8 @@ def update_roles(
     ldap_connection_action = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
-    log.info("test")
 
     for item in cartesian_product:
-        print(item)
         if add:
             ldap_connection_action.add(
                 f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}",
@@ -161,14 +159,25 @@ def update_roles(
                     "objectClass": ["NDRoleAssociation", "alias", "top"],
                 },
             )
-            log.info(f"Successfully added role '{item[1]}' to user '{item[0]}'")
-            log.info(ldap_connection_action.result["result"])
+            if ldap_connection_action.result["result"] == 0:
+                log.info(f"Successfully added role '{item[1]}' to user '{item[0]}'")
+            elif ldap_connection_action.result["result"] == 68:
+                log.info(f"Role '{item[1]}' already present for user '{item[0]}'")
+            else:
+                log.error(f"Failed to add role '{item[1]}' to user '{item[0]}'")
+                log.debug(ldap_connection_action.result)
         elif remove:
             ldap_connection_action.delete(f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}")
-            log.info(f"Successfully removed role '{item[1]}' from user '{item[0]}'")
+            if ldap_connection_action.result["result"] == 0:
+                log.info(f"Successfully removed role '{item[1]}' from user '{item[0]}'")
+            elif ldap_connection_action.result["result"] == 32:
+                log.info(f"Role '{item[1]}' already absent for user '{item[0]}'")
+            else:
+                log.error(f"Failed to remove role '{item[1]}' from user '{item[0]}'")
+                log.debug(ldap_connection_action.result)
         else:
             log.error("No action specified")
-    log.info("test2")
+
     if update_notes:
         with cli.database.connection() as connection:
             cursor = connection.cursor()
