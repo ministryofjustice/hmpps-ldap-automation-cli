@@ -1,10 +1,8 @@
-from github import Github, Auth
 from git import Repo
 import jwt
 import time
 import requests
 import logging
-from cli import env
 
 
 def get_access_token(app_id, private_key, installation_id):

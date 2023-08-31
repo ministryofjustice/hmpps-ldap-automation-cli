@@ -1,10 +1,10 @@
 import ldap
 
 from logger import log
-from cli import env
+import env
 
 from cli.ldap import ldap_connect
-from ldap3 import MODIFY_REPLACE, SUBTREE
+from ldap3 import MODIFY_REPLACE
 
 import cli.database
 from itertools import product
@@ -104,7 +104,8 @@ def update_roles(
     # # Search for users matching the user_filter
     ldap_connection_user_filter.search(",".join([user_ou, root_dn]), user_filter, attributes=["cn"])
     users_found = sorted([entry.cn.value for entry in ldap_connection_user_filter.entries if entry.cn.value])
-    print("users found from user filter", users_found)
+    log.debug("users found from user filter")
+    log.debug(users_found)
     ldap_connection_user_filter.unbind()
 
     roles_filter_list = role_filter.split(",")
@@ -132,18 +133,21 @@ def update_roles(
     roles_found = sorted(
         list(set([entry.entry_dn.split(",")[1].split("=")[1] for entry in ldap_connection_role_filter.entries]))
     )
-    print("users found from roles filter", roles_found)
+    log.debug("users found from roles filter: ")
+    log.debug(roles_found)
 
     ldap_connection_role_filter.unbind()
 
     # generate a list of matches in roles and users
     matched_users = set(users_found) & set(roles_found)
-    print("matched users", matched_users)
+    log.debug("matched users: ")
+    log.debug(matched_users)
 
     # cartesian_product = [(user, role) for user in matched_users for role in roles]
 
     cartesian_product = list(product(matched_users, roles))
-    print(cartesian_product)
+    log.debug("cartesian product: ")
+    log.debug(cartesian_product)
 
     ldap_connection_action = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")

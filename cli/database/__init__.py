@@ -1,11 +1,11 @@
 import oracledb
-import cli.env
+import env
 from logger import log
 
 connection_config = {
-    "user": cli.env.vars.get("DB_USER"),
-    "password": cli.env.secrets.get("DB_PASSWORD"),
-    "dsn": cli.env.vars.get("DB_DSN"),
+    "user": env.vars.get("DB_USER"),
+    "password": env.secrets.get("DB_PASSWORD"),
+    "dsn": env.vars.get("DB_DSN"),
 }
 
 

@@ -1,8 +1,6 @@
-import re
-
 import ldap3.utils.hashed
 from cli.ldap import ldap_connect
-from cli import env
+import env
 import cli.git as git
 import glob
 from logger import log

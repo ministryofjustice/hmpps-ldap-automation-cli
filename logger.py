@@ -1,5 +1,5 @@
 import logging
-import cli.env
+import env
 
 
 def configure_logging():
@@ -8,7 +8,7 @@ def configure_logging():
 
         def __init__(self, format_str=None, datefmt_str=None):
             super().__init__(fmt=format_str, datefmt=datefmt_str)
-            self._secrets_set = set(cli.env.secrets.values())  # Retrieve secrets set here
+            self._secrets_set = set(env.secrets.values())  # Retrieve secrets set here
 
         def _filter(self, s):
             redacted = " ".join(
@@ -23,8 +23,8 @@ def configure_logging():
 
     print("configure_logging")
     """Configure logging based on environment variables."""
-    format = cli.env.vars.get("LOG_FORMAT") or "%(asctime)s - %(levelname)s: %(message)s"
-    datefmt = cli.env.vars.get("LOG_DATE_FORMAT") or "%Y-%m-%d %H:%M:%S"
+    format = env.vars.get("LOG_FORMAT") or "%(asctime)s - %(levelname)s: %(message)s"
+    datefmt = env.vars.get("LOG_DATE_FORMAT") or "%Y-%m-%d %H:%M:%S"
 
     log = logging.getLogger(__name__)
 
@@ -34,8 +34,7 @@ def configure_logging():
     handler = logging.StreamHandler()
     handler.setFormatter(SensitiveFormatter(format_str=format, datefmt_str=datefmt))
     logging.root.addHandler(handler)
-
-    if cli.env.vars.get("DEBUG") == "1":
+    if env.vars.get("LOG_LEVEL") == "DEBUG":
         print("DEBUG")
         log.setLevel(logging.DEBUG)
     else:

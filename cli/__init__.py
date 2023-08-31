@@ -3,7 +3,6 @@ import cli.ldap.rbac, cli.ldap.user
 import logger
 
 from cli import git
-import cli.env
 
 
 @click.group()
