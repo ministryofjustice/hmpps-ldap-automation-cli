@@ -9,6 +9,7 @@ def configure_logging():
         def __init__(self, format_str=None, datefmt_str=None):
             super().__init__(fmt=format_str, datefmt=datefmt_str)
             self._secrets_set = set(env.secrets.values())  # Retrieve secrets set here
+            self.default_msec_format = "%s.%03d"
 
         def _filter(self, s):
             redacted = " ".join(
@@ -23,7 +24,7 @@ def configure_logging():
 
     print("configure_logging")
     """Configure logging based on environment variables."""
-    format = env.vars.get("LOG_FORMAT") or "%(asctime)s - %(levelname)s: %(message)s"
+    format = env.vars.get("LOG_FORMAT") or "%(asctime)s.%(msecs)03d - %(levelname)s: %(message)s"
     datefmt = env.vars.get("LOG_DATE_FORMAT") or "%Y-%m-%d %H:%M:%S"
 
     log = logging.getLogger(__name__)
@@ -37,7 +38,13 @@ def configure_logging():
     if env.vars.get("LOG_LEVEL") == "DEBUG":
         print("DEBUG")
         log.setLevel(logging.DEBUG)
-    else:
+    elif env.vars.get("LOG_LEVEL") == "WARNING":
+        print("WARNING")
+        log.setLevel(logging.WARNING)
+    elif env.vars.get("LOG_LEVEL") == "ERROR":
+        print("ERROR")
+        log.setLevel(logging.ERROR)
+    elif env.vars.get("LOG_LEVEL") == "INFO":
         print("INFO")
         log.setLevel(logging.INFO)
     return True
