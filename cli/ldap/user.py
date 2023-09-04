@@ -1,10 +1,10 @@
-import ldap
+import cli.ldap
 
-from logger import log
-import env
+from cli.logger import log
+from cli import env
 
 from cli.ldap import ldap_connect
-from ldap3 import MODIFY_REPLACE
+from ldap3 import MODIFY_REPLACE, DEREF_NEVER
 
 import cli.database
 from itertools import product
@@ -128,7 +128,7 @@ def update_roles(
         ",".join([user_ou, root_dn]),
         full_role_filter,
         attributes=["cn"],
-        dereference_aliases=ldap.DEREF_NEVER,
+        dereference_aliases=DEREF_NEVER,
     )
     roles_found = sorted(
         list(set([entry.entry_dn.split(",")[1].split("=")[1] for entry in ldap_connection_role_filter.entries]))

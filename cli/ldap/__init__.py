@@ -1,5 +1,4 @@
 from ldap3 import Server, Connection, ALL
-from logger import log
 
 
 # import oracledb

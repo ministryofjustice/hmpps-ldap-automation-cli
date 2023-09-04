@@ -1,8 +1,7 @@
 import click
 import cli.ldap.rbac, cli.ldap.user
-import logger
 
-from cli import git
+from cli import git, logger
 
 
 @click.group()
