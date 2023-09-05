@@ -189,9 +189,7 @@ def update_roles(
             try:
                 update_sql = "UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user)"
                 update_cursor = connection.cursor()
-
-                update_cursor.execute(update_sql, user=user)
-
+                update_cursor.execute(update_sql, [user])
                 update_cursor.close()
 
                 insert_sql = """
@@ -214,11 +212,7 @@ def update_roles(
                                 UPPER(DISTINGUISHED_NAME) = UPPER(:user)
                         """
                 insert_cursor = connection.cursor()
-                insert_cursor.execute(
-                    insert_sql,
-                    user=user,
-                    user_note=user_note,
-                )
+                insert_cursor.execute(insert_sql, [user_note, user])
                 insert_cursor.close()
 
                 log.info(f"Updated notes for user {user}")
