@@ -208,9 +208,8 @@ def update_roles(
                             WHERE
                                 UPPER(DISTINGUISHED_NAME) = UPPER(:1)
                         """
-                log.info(cursor.prepare(update_sql, (user,)))
-                log.info(cursor.prepare(insert_sql, (user, user_notes)))
                 cursor.execute(update_sql, (user,))
+                log.info(cursor.statement)
                 cursor.execute(
                     insert_sql,
                     (
@@ -218,6 +217,7 @@ def update_roles(
                         user_notes,
                     ),
                 )
+                log.info(cursor.statement)
                 log.info(f"Updated notes for user {user}")
                 connection.commit()
                 log.info("Committed changes to database successfully")
