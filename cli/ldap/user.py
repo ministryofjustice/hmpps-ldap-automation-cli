@@ -183,9 +183,9 @@ def update_roles(
             log.error("No action specified")
 
     if update_notes:
-        with cli.database.connection() as connection:
-            cursor = connection.cursor()
-            log.debug("Created database cursor successfully")
+        connection = cli.database.connection()
+        cursor = connection.cursor()
+        log.debug("Created database cursor successfully")
         for user in matched_users:
             try:
                 update_sql = f"UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)"
