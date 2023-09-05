@@ -93,7 +93,7 @@ def update_roles(
     add,
     remove,
     update_notes,
-    user_notes="User roles updated by Delius Script",
+    user_note="User roles updated by Delius Script",
     user_filter="(userSector=*)",
     role_filter="*",
 ):
@@ -188,7 +188,7 @@ def update_roles(
         log.debug("Created database cursor successfully")
         for user in matched_users:
             try:
-                update_sql = "UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)"
+                update_sql = "UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user)"
                 insert_sql = """
                             INSERT INTO USER_NOTE (
                                 USER_NOTE_ID,
@@ -202,20 +202,17 @@ def update_roles(
                                 USER_ID,
                                 4,
                                 sysdate,
-                                :2
+                                :user_note
                             FROM
                                 USER_
                             WHERE
-                                UPPER(DISTINGUISHED_NAME) = UPPER(:1)
+                                UPPER(DISTINGUISHED_NAME) = UPPER(:user)
                         """
-                cursor.execute(update_sql, (user,))
-                log.info(cursor.bindvars)
+                cursor.execute(update_sql, user=user)
                 cursor.execute(
                     insert_sql,
-                    (
-                        user,
-                        user_notes,
-                    ),
+                    user=user,
+                    user_note=user_note,
                 )
                 log.info(cursor.bindvars)
                 log.info(f"Updated notes for user {user}")
