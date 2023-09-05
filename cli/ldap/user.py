@@ -217,8 +217,8 @@ def update_roles(
                     ),
                 )
                 log.info(f"Updated notes for user {user}")
+                connection.commit()
+                log.info("Committed changes to database successfully")
             except:
                 log.exception(f"Failed to update notes for user {user}")
-        connection.commit()
-        log.info("Committed changes to database successfully")
         connection.close()
