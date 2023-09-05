@@ -187,7 +187,7 @@ def update_roles(
         log.debug("Created database cursor successfully")
         for user in matched_users:
             try:
-                update_sql = "UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user)"
+                update_sql = "UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user_dn)"
                 update_cursor = connection.cursor()
                 update_cursor.execute(update_sql, [user])
                 update_cursor.close()
@@ -209,7 +209,7 @@ def update_roles(
                             FROM
                                 USER_
                             WHERE
-                                UPPER(DISTINGUISHED_NAME) = UPPER(:user)
+                                UPPER(DISTINGUISHED_NAME) = UPPER(:user_dn)
                         """
                 insert_cursor = connection.cursor()
                 insert_cursor.execute(insert_sql, [user_note, user])
