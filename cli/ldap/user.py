@@ -1,3 +1,5 @@
+import oracledb
+
 import cli.ldap
 
 from cli.logger import log
@@ -212,7 +214,8 @@ def update_roles(
                                 UPPER(DISTINGUISHED_NAME) = UPPER(:user_dn);
                         """
                 insert_cursor = connection.cursor()
-                insert_cursor.execute(insert_sql, [user_note, user])
+                insert_cursor.setinputsizes(user_note=oracledb.CLOB)
+                insert_cursor.execute(insert_sql, user_note=user_note, user_dn=user)
                 insert_cursor.close()
 
                 log.info(f"Updated notes for user {user}")
