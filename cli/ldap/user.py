@@ -95,10 +95,13 @@ def update_roles(
     add,
     remove,
     update_notes,
-    user_note="User roles updated by Delius Script",
+    user_note,
     user_filter="(userSector=*)",
     role_filter="*",
 ):
+    if update_notes and (user_note is None or len(user_note) < 1):
+        log.error("User note must be provided when updating notes")
+        raise Exception("User note must be provided when updating notes")
     ldap_connection_user_filter = ldap_connect(
         env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
