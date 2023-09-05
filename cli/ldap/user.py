@@ -208,6 +208,8 @@ def update_roles(
                             WHERE
                                 UPPER(DISTINGUISHED_NAME) = UPPER(:1)
                         """
+                log.info(cursor.prepare(update_sql))
+
                 cursor.execute(update_sql, (user,))
                 cursor.execute(
                     insert_sql,
