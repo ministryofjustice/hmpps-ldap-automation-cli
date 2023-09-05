@@ -188,10 +188,34 @@ def update_roles(
         log.debug("Created database cursor successfully")
         for user in matched_users:
             try:
-                update_sql = f"UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)"
-                insert_sql = f"INSERT INTO USER_NOTE (USER_NOTE_ID, USER_ID, LAST_UPDATED_USER_ID, LAST_UPDATED_DATETIME, NOTES) SELECT user_note_id_seq.nextval, (select USER_ID from USER_ WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)), 4, sysdate, :2, FROM dual;"
+                update_sql = "UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:1)"
+                insert_sql = """
+                            INSERT INTO USER_NOTE (
+                                USER_NOTE_ID,
+                                USER_ID,
+                                LAST_UPDATED_USER_ID,
+                                LAST_UPDATED_DATETIME,
+                                NOTES
+                            )
+                            SELECT
+                                user_note_id_seq.nextval,
+                                USER_ID,
+                                4,
+                                sysdate,
+                                :2
+                            FROM
+                                USER_
+                            WHERE
+                                UPPER(DISTINGUISHED_NAME) = UPPER(:1)
+                        """
                 cursor.execute(update_sql, (user,))
-                cursor.execute(insert_sql, (user, user_notes))
+                cursor.execute(
+                    insert_sql,
+                    (
+                        user,
+                        user_notes,
+                    ),
+                )
                 log.info(f"Updated notes for user {user}")
             except:
                 log.exception(f"Failed to update notes for user {user}")
