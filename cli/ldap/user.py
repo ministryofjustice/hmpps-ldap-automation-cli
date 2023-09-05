@@ -184,11 +184,16 @@ def update_roles(
 
     if update_notes:
         connection = cli.database.connection()
-        cursor = connection.cursor()
         log.debug("Created database cursor successfully")
         for user in matched_users:
             try:
                 update_sql = "UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE, LAST_UPDATED_USER_ID=4 WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user)"
+                update_cursor = connection.cursor()
+
+                update_cursor.execute(update_sql, user=user)
+
+                update_cursor.close()
+
                 insert_sql = """
                             INSERT INTO USER_NOTE (
                                 USER_NOTE_ID,
@@ -208,13 +213,14 @@ def update_roles(
                             WHERE
                                 UPPER(DISTINGUISHED_NAME) = UPPER(:user)
                         """
-                cursor.execute(update_sql, user=user)
-                cursor.execute(
+                insert_cursor = connection.cursor()
+                insert_cursor.execute(
                     insert_sql,
                     user=user,
                     user_note=user_note,
                 )
-                log.info(cursor.bindvars)
+                insert_cursor.close()
+
                 log.info(f"Updated notes for user {user}")
                 connection.commit()
                 log.info("Committed changes to database successfully")
