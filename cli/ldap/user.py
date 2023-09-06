@@ -278,7 +278,7 @@ def deactivate_crc_users(user_ou, root_dn):
             attributes=["dn"],
         )
 
-        found_users.append([entry.entry_dn for entry in ldap_connection.entries])
+        found_users.append(entry.entry_dn for entry in ldap_connection.entries)
 
     ldap_connection.search(
         ",".join([user_ou, root_dn]),
