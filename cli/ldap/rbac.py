@@ -1,11 +1,9 @@
-import re
-
 import ldap3.utils.hashed
 from cli.ldap import ldap_connect
 from cli import env
 import cli.git as git
 import glob
-from cli.logging import log
+from cli.logger import log
 from pathlib import Path
 import cli.template
 from ldif import LDIFParser
@@ -73,10 +71,15 @@ def context_ldif(rendered_files):
                 env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
             )
             ldap_connection.add(dn, attributes=record)
-            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
-                log.debug(ldap_connection.result)
-                log.debug(ldap_connection.response)
-                raise Exception(f"Failed to add context {dn}, status: {ldap_connection.result['result']}")
+            print(ldap_connection.result["result"])
+            if ldap_connection.result["result"] == 0:
+                print(f"Successfully added context")
+            elif ldap_connection.result["result"] == 68:
+                print(f"{dn} already exists")
+            else:
+                print(ldap_connection.result)
+                print(ldap_connection.response)
+                raise Exception(f"Failed to add  {dn}... {record}")
 
 
 def group_ldifs(rendered_files):
@@ -98,12 +101,14 @@ def group_ldifs(rendered_files):
             if record.get("description"):
                 print("updating description")
                 ldap_connection.modify(dn, {"description": [(ldap3.MODIFY_REPLACE, record["description"])]})
-                if any(result not in [0, 68] for result in ldap_connection.result["result"]):
-                    log.debug(ldap_connection.result)
-                    log.debug(ldap_connection.response)
-                    raise Exception(
-                        f"Failed to update description for group {dn}, status: {ldap_connection.result['result']}"
-                    )
+                if ldap_connection.result["result"] == 0:
+                    print(f"Successfully added groups")
+                elif ldap_connection.result["result"] == 68:
+                    print(f"{dn} already exists")
+                else:
+                    print(ldap_connection.result)
+                    print(ldap_connection.response)
+                    raise Exception(f"Failed to add  {dn}... {record}")
 
 
 def policy_ldifs(rendered_files):
@@ -126,10 +131,14 @@ def policy_ldifs(rendered_files):
             # print(record)
             # add the record to ldap
             ldap_connection.add(dn, attributes=record)
-            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
-                log.debug(ldap_connection.result)
-                log.debug(ldap_connection.response)
-                raise Exception(f"Failed to add policy {dn}, status: {ldap_connection.result['result']}")
+            if ldap_connection.result["result"] == 0:
+                print(f"Successfully added policies")
+            elif ldap_connection.result["result"] == 68:
+                print(f"{dn} already exists")
+            else:
+                print(ldap_connection.result)
+                print(ldap_connection.response)
+                raise Exception(f"Failed to add  {dn}... {record}")
 
 
 def role_ldifs(rendered_files):
@@ -156,10 +165,14 @@ def role_ldifs(rendered_files):
             # print(record)
             # add the record to ldap
             ldap_connection.add(dn, attributes=record)
-            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
-                log.debug(ldap_connection.result)
-                log.debug(ldap_connection.response)
-                raise Exception(f"Failed to add role {dn}, status: {ldap_connection.result['result']}")
+            if ldap_connection.result["result"] == 0:
+                print(f"Successfully added roles")
+            elif ldap_connection.result["result"] == 68:
+                print(f"{dn} already exists")
+            else:
+                print(ldap_connection.result)
+                print(ldap_connection.response)
+                raise Exception(f"Failed to add  {dn}... {record}")
 
 
 # not complete!!
@@ -182,10 +195,14 @@ def schema_ldifs(rendered_files):
             # print(record)
             # add the record to ldap
             ldap_connection.add(dn, attributes=record)
-            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
-                log.debug(ldap_connection.result)
-                log.debug(ldap_connection.response)
-                raise Exception(f"Failed to add schema {dn}, status: {ldap_connection.result['result']}")
+            if ldap_connection.result["result"] == 0:
+                print(f"Successfully added schemas")
+            elif ldap_connection.result["result"] == 68:
+                print(f"{dn} already exists")
+            else:
+                print(ldap_connection.result)
+                print(ldap_connection.response)
+                raise Exception(f"Failed to add  {dn}... {record}")
 
 
 def user_ldifs(rendered_files):
@@ -202,13 +219,16 @@ def user_ldifs(rendered_files):
         # loop through the records
         for dn, record in parser.parse():
             print("got entry record: %s" % dn)
+
+            # for each user find child entries and delete them
+            ldap_connection.search(dn, "(objectclass=*)", search_scope=ldap3.SUBTREE)
+            for entry in ldap_connection.entries:
+                print(entry.entry_dn)
+                ldap_connection.delete(entry.entry_dn)
+
             # print(record)
             # add the record to ldap
             ldap_connection.delete(dn)
-            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
-                log.debug(ldap_connection.result)
-                log.debug(ldap_connection.response)
-                raise Exception(f"Failed to delete user {dn}, status: {ldap_connection.result['result']}")
 
     # loop through the user files
     for file in user_files:
@@ -220,10 +240,14 @@ def user_ldifs(rendered_files):
             # print(record)
             # add the record to ldap
             ldap_connection.add(dn, attributes=record)
-            if any(result not in [0, 68] for result in ldap_connection.result["result"]):
-                log.debug(ldap_connection.result)
-                log.debug(ldap_connection.response)
-                raise Exception(f"Failed to add user {dn}, status: {ldap_connection.result['result']}")
+            if ldap_connection.result["result"] == 0:
+                print(f"Successfully added users")
+            elif ldap_connection.result["result"] == 68:
+                print(f"{dn} already exists")
+            else:
+                print(ldap_connection.result)
+                print(ldap_connection.response)
+                raise Exception(f"Failed to add  {dn}... {record}")
 
 
 def main(rbac_repo_tag, clone_path="./rbac"):
