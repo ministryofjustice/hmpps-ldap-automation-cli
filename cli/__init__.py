@@ -77,6 +77,7 @@ main_group.add_command(add_roles_to_users)
 main_group.add_command(rbac_uplift)
 main_group.add_command(update_user_home_areas)
 main_group.add_command(update_user_roles)
+main_group.add_command(deactivate_crc_users)
 
 logger.configure_logging()
 
