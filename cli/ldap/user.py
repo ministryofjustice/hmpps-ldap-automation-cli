@@ -11,6 +11,8 @@ from ldap3 import MODIFY_REPLACE, DEREF_NEVER
 import cli.database
 from itertools import product
 
+from datetime import datetime
+
 
 #########################################
 # Change a users home area
@@ -227,3 +229,83 @@ def update_roles(
             except:
                 log.exception(f"Failed to update notes for user {user}")
         connection.close()
+
+
+#########################################
+# Deactivate CRC User Accounts
+#########################################
+
+
+def deactivate_crc_users(user_ou, root_dn):
+    log.info("Deactivating CRC users")
+    ldap_connection = ldap_connect(
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+    )
+
+    user_filter = "(userSector=private)(!(userSector=public))(!(endDate=*))(objectclass=NDUser)"
+
+    home_areas = [
+        [
+            "C01",
+            "C02",
+            "C03",
+            "C04",
+            "C05",
+            "C06",
+            "C07",
+            "C08",
+            "C09",
+            "C10",
+            "C11",
+            "C12",
+            "C13",
+            "C14",
+            "C15",
+            "C16",
+            "C17",
+            "C18",
+            "C19",
+            "C20",
+            "C21",
+        ]
+    ]
+
+    found_users = []
+    for home_area in home_areas:
+        ldap_connection.search(
+            ",".join([user_ou, root_dn]),
+            f"(&(userHomeArea={home_area})(!(cn={home_area})){user_filter})",
+            attributes=["dn"],
+        )
+
+        found_users.append(entry.entry_dn for entry in ldap_connection.entries)
+
+    ldap_connection.search(
+        ",".join([user_ou, root_dn]),
+        f"(&(!(userHomeArea=*)){user_filter})",
+        attributes=["dn"],
+    )
+    found_users_no_home_area = [entry.entry_dn for entry in ldap_connection.entries]
+
+    all_users = found_users + found_users_no_home_area
+
+    date_str = f"{datetime.now().strftime('%Y%m%d')}000000Z"
+
+    for user in all_users:
+        ldap_connection.modify(user, {"endDate": [(MODIFY_REPLACE, [date_str])]})
+
+    connection = cli.database.connection()
+    for user_dn in all_users:
+        try:
+            update_sql = (
+                f"UPDATE USER_ SET END_DATE=TRUNC(CURRENT_DATE) WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user_dn)"
+            )
+            update_cursor = connection.cursor()
+            update_cursor.execute(update_sql, [user_dn])
+            update_cursor.close()
+            log.info(f"Updated END_DATE for user {user_dn}")
+            connection.commit()
+            log.info("Committed changes to database successfully")
+        except:
+            log.exception(f"Failed to update END_DATE for user {user_dn}")
+    connection.close()
