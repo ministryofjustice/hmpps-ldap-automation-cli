@@ -16,6 +16,21 @@ from ldif import LDIFParser
 #   token = git.get_access_token(app_id, private_key, installation_id)
 
 
+ldap_config = {
+    "bind_user": "cn=root,dc=moj,dc=com",
+    "bind_user_cn": "root",
+    "base_root": "dc=moj,dc=com",
+    "base_root_dc": "moj",
+    "base_users": "ou=Users,dc=moj,dc=com",
+    "base_users_ou": "Users",
+    "base_service_users": "cn=EISUsers,ou=Users,dc=moj,dc=com",
+    "base_roles": "cn=ndRoleCatalogue,ou=Users,dc=moj,dc=com",
+    "base_role_groups": "cn=ndRoleGroups,ou=Users,dc=moj,dc=com",
+    "base_groups": "ou=groups,dc=moj,dc=com",
+    "base_groups_ou": "groups",
+}
+
+
 def get_repo(repo_tag="master"):
     url = "https://github.com/ministryofjustice/hmpps-ndelius-rbac.git"
     try:
@@ -60,20 +75,6 @@ def prep_for_templating(files, strings=None):
 def template_rbac(files):
     hashed_pwd_admin_user = ldap3.utils.hashed.hashed(ldap3.HASHED_SALTED_SHA, env.secrets.get("LDAP_ADMIN_PASSWORD"))
     rendered_files = []
-
-    ldap_config = {
-        "bind_user": "cn=root,dc=moj,dc=com",
-        "bind_user_cn": "root",
-        "base_root": "dc=moj,dc=com",
-        "base_root_dc": "moj",
-        "base_users": "ou=Users,dc=moj,dc=com",
-        "base_users_ou": "Users",
-        "base_service_users": "cn=EISUsers,ou=Users,dc=moj,dc=com",
-        "base_roles": "cn=ndRoleCatalogue,ou=Users,dc=moj,dc=com",
-        "base_role_groups": "cn=ndRoleGroups,ou=Users,dc=moj,dc=com",
-        "base_groups": "ou=groups,dc=moj,dc=com",
-        "base_groups_ou": "groups",
-    }
 
     for file in files:
         rendered_text = cli.template.render(
@@ -149,7 +150,8 @@ def policy_ldifs(rendered_files):
     policy_files = [file for file in rendered_files if "policy" in Path(file).name]
 
     # first, delete the policies
-    ldap_connection.delete("ou=Policies," + env.vars.get("LDAP_CONFIG").get("base_root"))
+    ldap_config_dict = env.vars.get("LDAP_CONFIG") or ldap_config
+    ldap_connection.delete("ou=Policies," + ldap_config_dict.get("base_root"))
 
     # loop through the policy files
     for file in policy_files:
@@ -179,8 +181,9 @@ def role_ldifs(rendered_files):
     role_files = [file for file in rendered_files if "nd_role" in Path(file).name]
 
     # first, delete the roles
-    ldap_connection.delete("cn=ndRoleCatalogue," + env.vars.get("LDAP_CONFIG").get("base_users"))
-    ldap_connection.delete("cn=ndRoleGroups," + env.vars.get("LDAP_CONFIG").get("base_users"))
+    ldap_config_dict = env.vars.get("LDAP_CONFIG") or ldap_config
+    ldap_connection.delete("cn=ndRoleCatalogue," + ldap_config_dict.get("base_users"))
+    ldap_connection.delete("cn=ndRoleGroups," + ldap_config_dict.get("base_users"))
 
     # ensure boolean values are Uppercase.. this comes from the ansible yml
     # (not yet implemented, probably not needed)
