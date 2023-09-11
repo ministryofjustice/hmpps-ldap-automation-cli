@@ -29,10 +29,10 @@ def get_repo(repo_tag="master"):
 def prep_for_templating(files, strings=None):
     rbac_substitutions = {
         "bind_password_hash.stdout": "bind_password_hash",
-        r"ldap_config.base_users | regex_replace(\'^.+?=(.+?),.*$\', \'\\\1\')": "ldap_config.base_users_ou",
-        r"ldap_config.base_root | regex_replace(\'^.+?=(.+?),.*$\', \'\\\1\')": "ldap_config.base_root_dc",
-        r"ldap_config.base_groups | regex_replace(\'^.+?=(.+?),.*$\', \'\\\1\')": "ldap_config.base_groups_ou",
-        r"ldap_config.bind_user | regex_replace(\'^.+?=(.+?),.*$\', \'\\\1\')": "ldap_config.bind_user_cn",
+        r"ldap_config.base_users | regex_replace('^.+?=(.+?),.*$', '\\1')": "ldap_config.base_users_ou",
+        r"ldap_config.base_root | regex_replace('^.+?=(.+?),.*$', '\\1')": "ldap_config.base_root_dc",
+        r"ldap_config.base_groups | regex_replace('^.+?=(.+?),.*$', '\\1')": "ldap_config.base_groups_ou",
+        r"ldap_config.bind_user | regex_replace('^.+?=(.+?),.*$', '\\1')": "ldap_config.bind_user_cn",
         "'/'+environment_name+'/'+project_name+'": "",
         "/gdpr/api/": "'gdpr_api_",
         "/pwm/pwm/config_password": "'pwm_config_password",
@@ -52,9 +52,6 @@ def prep_for_templating(files, strings=None):
         file = Path(file_path)
         for k, v in strings.items():
             print("replacing", k, "with", v, "in", file_path)
-            # print(
-            #     file.read_text().replace(k, v),
-            # )
             file.write_text(
                 file.read_text().replace(k, v),
             )
