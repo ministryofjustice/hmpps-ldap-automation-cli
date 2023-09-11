@@ -25,8 +25,24 @@ def get_repo(repo_tag="master"):
 
 
 def prep_for_templating(files, strings=None):
+    rbac_substitutions = {
+        "bind_password_hash.stdout": "bind_password_hash",
+        r"ldap_config.base_users | regex_replace(\'^.+?=(.+?),.*$\', \'\\\1\')": "ldap_config.base_users_ou",
+        r"ldap_config.base_root | regex_replace(\'^.+?=(.+?),.*$\', \'\\\1\')": "ldap_config.base_root_dc",
+        r"ldap_config.base_groups | regex_replace(\'^.+?=(.+?),.*$\', \'\\\1\')": "ldap_config.base_groups_ou",
+        r"ldap_config.bind_user | regex_replace(\'^.+?=(.+?),.*$\', \'\\\1\')": "ldap_config.bind_user_cn",
+        "'/'+environment_name+'/'+project_name+'": "",
+        "/gdpr/api/": "'gdpr_api_",
+        "/pwm/pwm/config_password": "'pwm_config_password",
+        "/merge/api/client_secret": "'merge_api_client_secret",
+        "/weblogic/ndelius-domain/umt_client_secret": "'umt_client_secret",
+        "ssm_prefix + ": "",
+        "cn=Users,dc=pcms,dc=internal": "ou=Users,dc=moj,dc=com",
+        "ssm_prefix+": "",
+    }
+
     if strings is None:
-        strings = env.vars.get("RBAC_SUBSTITUTIONS")
+        strings = env.vars.get("RBAC_SUBSTITUTIONS") or rbac_substitutions
     # get a list of files
     # print(strings)
     # print(type(strings))
@@ -45,10 +61,25 @@ def prep_for_templating(files, strings=None):
 def template_rbac(files):
     hashed_pwd_admin_user = ldap3.utils.hashed.hashed(ldap3.HASHED_SALTED_SHA, env.secrets.get("LDAP_ADMIN_PASSWORD"))
     rendered_files = []
+
+    ldap_config = {
+        "bind_user": "cn=root,dc=moj,dc=com",
+        "bind_user_cn": "root",
+        "base_root": "dc=moj,dc=com",
+        "base_root_dc": "moj",
+        "base_users": "ou=Users,dc=moj,dc=com",
+        "base_users_ou": "Users",
+        "base_service_users": "cn=EISUsers,ou=Users,dc=moj,dc=com",
+        "base_roles": "cn=ndRoleCatalogue,ou=Users,dc=moj,dc=com",
+        "base_role_groups": "cn=ndRoleGroups,ou=Users,dc=moj,dc=com",
+        "base_groups": "ou=groups,dc=moj,dc=com",
+        "base_groups_ou": "groups",
+    }
+
     for file in files:
         rendered_text = cli.template.render(
             file,
-            ldap_config=env.vars.get("LDAP_CONFIG"),
+            ldap_config=env.vars.get("LDAP_CONFIG") or ldap_config,
             bind_password_hash=hashed_pwd_admin_user,
             secrets=env.secrets,
             oasys_password=env.secrets.get("OASYS_PASSWORD"),
@@ -252,8 +283,6 @@ def user_ldifs(rendered_files):
 
 def main(rbac_repo_tag, clone_path="./rbac"):
     repo = get_repo(rbac_repo_tag)
-    print(env.vars.get("RBAC_SUBSTITUTIONS"))
-
     files = [
         file
         for file in glob.glob(f"{clone_path}/**/*", recursive=True)
