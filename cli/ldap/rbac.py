@@ -8,16 +8,18 @@ from pathlib import Path
 import cli.template
 from ldif import LDIFParser
 
+#### example for token auth
+# def get_repo_with_token(repo_tag="master"):
+#   app_id = env.vars.get("GH_APP_ID")
+#   private_key = env.vars.get("GH_PRIVATE_KEY")
+#   installation_id = env.vars.get("GH_INSTALLATION_ID")
+#   token = git.get_access_token(app_id, private_key, installation_id)
+
 
 def get_repo(repo_tag="master"):
-    app_id = env.vars.get("GH_APP_ID")
-    private_key = env.vars.get("GH_PRIVATE_KEY")
-    installation_id = env.vars.get("GH_INSTALLATION_ID")
-    # url = 'https://github.com/ministryofjustice/hmpps-delius-pipelines.git'
     url = "https://github.com/ministryofjustice/hmpps-ndelius-rbac.git"
-    token = git.get_access_token(app_id, private_key, installation_id)
     try:
-        repo = git.get_repo(url, token=token, dest_name="rbac", branch_or_tag=repo_tag)
+        repo = git.get_repo(url, dest_name="rbac", branch_or_tag=repo_tag)
         return repo
     except Exception as e:
         log.exception(e)
