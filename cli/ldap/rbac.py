@@ -299,3 +299,4 @@ def main(rbac_repo_tag, clone_path="./rbac"):
     role_ldifs(rendered_files)
     group_ldifs(rendered_files)
     user_ldifs(rendered_files)
+    log.info("RBAC uplift complete")
