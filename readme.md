@@ -27,3 +27,9 @@ commit
 ## Usage
 
 `ldap-automation --help`
+
+
+## Documentation
+Documentation is given in line in the standard python `"""` format.
+
+See https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings for more.
