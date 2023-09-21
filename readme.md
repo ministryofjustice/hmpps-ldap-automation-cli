@@ -32,8 +32,8 @@ commit
 
 ## pre-commit
 
-This project uses pre-commit to run a number of checks on the code before it is committed. To install the pre-commit
-hooks run:
+This project uses pre-commit to run a number of checks on the code before it is committed.
+To install the pre-commit hooks run:
 
 `pre-commit install`
 
