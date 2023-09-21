@@ -8,13 +8,6 @@ from pathlib import Path
 import cli.template
 from ldif import LDIFParser
 
-#### example for token auth
-# def get_repo_with_token(repo_tag="master"):
-#   app_id = env.vars.get("GH_APP_ID")
-#   private_key = env.vars.get("GH_PRIVATE_KEY")
-#   installation_id = env.vars.get("GH_INSTALLATION_ID")
-#   token = git.get_access_token(app_id, private_key, installation_id)
-
 # Default ldap configuration dictionary. This can be overridden by setting the VARS_LDAP_CONFIG_DICT environment variable
 ldap_config = {
     "bind_user": "cn=root,dc=moj,dc=com",
@@ -35,6 +28,12 @@ Get the rbac repo from github. repo_tag can be overridden by passing in the tag 
 :param repo_tag: the tag to get from the rbac repo
 :return: the git repo object
 """
+#### example for token auth
+# def get_repo_with_token(repo_tag="master"):
+#   app_id = env.vars.get("GH_APP_ID")
+#   private_key = env.vars.get("GH_PRIVATE_KEY")
+#   installation_id = env.vars.get("GH_INSTALLATION_ID")
+#   token = git.get_access_token(app_id, private_key, installation_id)
 
 
 def get_repo(repo_tag="master"):
