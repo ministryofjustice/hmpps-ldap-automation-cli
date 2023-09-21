@@ -36,7 +36,6 @@ repos:
           'flake8-implicit-str-concat',
           'pydocstyle>=5.0.0',
         ]
-        exclude: ^tests/test_cases/no_closing_bracket\.py$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.5
     hooks:
