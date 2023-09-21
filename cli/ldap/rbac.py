@@ -334,7 +334,11 @@ def schema_ldifs(
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
 
-    schema_files = [file for file in rendered_files if "delius.ldif" or "pwm.ldif" in Path(file).name]
+    schema_files = [
+        file
+        for file in rendered_files
+        if "delius.ldif" or "pwm.ldif" in Path(file).name
+    ]
 
     # loop through the schema files
     for file in schema_files:
@@ -450,7 +454,9 @@ def main(
             f"{clone_path}/**/*",
             recursive=True,
         )
-        if Path(file).is_file() and Path(file).name.endswith(".ldif") or Path(file).name.endswith(".j2")
+        if Path(file).is_file()
+        and Path(file).name.endswith(".ldif")
+        or Path(file).name.endswith(".j2")
     ]
 
     prep_for_templating(files)
