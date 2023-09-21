@@ -6,12 +6,23 @@ max-line-length = 120
 extend-ignore =
     # See https://github.com/PyCQA/pycodestyle/issues/373
     # flake8/pycodechecker give false positives on black code
-    E203, E266, E501, W503, F403, F401
+    # line break before ':' apparently gives false positives with black formatter...
+    E203,
+    # line break before binary operator, fights with black formatter...
+    W503,
+    # importing with '*' ...
+    F403,
+    # Bare exception handling, fixing in NIT-854
     E722,
+    # Missing docstring in public nested class
     D104,
+    # Missing docstring in public package
     D103,
+    # f-string but no variables, e.g. print(f"hello")...
     F541,
+    # Line too long (>79 chars), but should not be firing due to max-line-length = 120
     E501,
+    # add docustrings
     D100,
     # to be corrected with NIT-854
     B001
