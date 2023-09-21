@@ -1,4 +1,7 @@
-from setuptools import setup, find_packages
+from setuptools import (
+    setup,
+    find_packages,
+)
 
 # Read requirements from requirements.txt
 with open("requirements.txt") as f:

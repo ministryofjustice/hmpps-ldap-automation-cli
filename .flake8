@@ -1,13 +1,20 @@
 [flake8]
 
-# Recommend matching the black line length (default 88),
-# rather than using the flake8 default of 79:
+# PEP-8 line length is not very practical
 max-line-length = 120
 
 extend-ignore =
     # See https://github.com/PyCQA/pycodestyle/issues/373
     # flake8/pycodechecker give false positives on black code
-    E203,
+    E203, E266, E501, W503, F403, F401
+    E722,
+    D104,
+    D103,
+    F541,
+    E501,
+    D100,
+    # to be corrected with NIT-854
+    B001
 
 # Most of our test cases deliberately violate style checks:
 per-file-ignores =
