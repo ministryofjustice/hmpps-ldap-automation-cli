@@ -17,16 +17,25 @@ from datetime import datetime
 #########################################
 # Change a users home area
 #########################################
-def change_home_areas(old_home_area, new_home_area, user_ou, root_dn, attribute="userHomeArea", object_class="NDUser"):
+def change_home_areas(
+    old_home_area,
+    new_home_area,
+    user_ou,
+    root_dn,
+    attribute="userHomeArea",
+    object_class="NDUser",
+):
     log.info(f"Updating user home areas from {old_home_area} to {new_home_area}")
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
     )
 
-    search_filter = (
-        f"(&(objectclass={object_class})(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))"
+    search_filter = f"(&(objectclass={object_class})(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))"
+    ldap_connection.search(
+        ",".join([user_ou, root_dn]), search_filter, attributes=[attribute]
     )
-    ldap_connection.search(",".join([user_ou, root_dn]), search_filter, attributes=[attribute])
 
     # Iterate through the search results and update the attribute
     for entry in ldap_connection.entries:
@@ -38,7 +47,9 @@ def change_home_areas(old_home_area, new_home_area, user_ou, root_dn, attribute=
         if ldap_connection.result["result"] == 0:
             log.info(f"Successfully updated {attribute} for {dn}")
         else:
-            log.error(f"Failed to update {attribute} for {dn}: {ldap_connection.result}")
+            log.error(
+                f"Failed to update {attribute} for {dn}: {ldap_connection.result}"
+            )
 
 
 #########################################
@@ -52,13 +63,18 @@ def parse_user_role_list(user_role_list):
     # and the roles are separated by a semi-colon:
     # username1,role1;role2;role3|username2,role1;role2
 
-    return {user.split(",")[0]: user.split(",")[1].split(";") for user in user_role_list.split("|")}
+    return {
+        user.split(",")[0]: user.split(",")[1].split(";")
+        for user in user_role_list.split("|")
+    }
 
 
 def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
     log.info(f"Adding roles {roles} to user {username}")
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
     )
     for role in roles:
         ldap_connection.add(
@@ -78,7 +94,9 @@ def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=co
             raise Exception(f"Failed to add role {role} to user {username}")
 
 
-def process_user_roles_list(user_role_list, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
+def process_user_roles_list(
+    user_role_list, user_ou="ou=Users", root_dn="dc=moj,dc=com"
+):
     log.info(f"secrets: {env.secrets}")
     user_roles = parse_user_role_list(user_role_list)
     for user, roles in user_roles.items():
@@ -105,12 +123,22 @@ def update_roles(
         log.error("User note must be provided when updating notes")
         raise Exception("User note must be provided when updating notes")
     ldap_connection_user_filter = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
     )
 
     # # Search for users matching the user_filter
-    ldap_connection_user_filter.search(",".join([user_ou, root_dn]), user_filter, attributes=["cn"])
-    users_found = sorted([entry.cn.value for entry in ldap_connection_user_filter.entries if entry.cn.value])
+    ldap_connection_user_filter.search(
+        ",".join([user_ou, root_dn]), user_filter, attributes=["cn"]
+    )
+    users_found = sorted(
+        [
+            entry.cn.value
+            for entry in ldap_connection_user_filter.entries
+            if entry.cn.value
+        ]
+    )
     log.debug("users found from user filter")
     log.debug(users_found)
     ldap_connection_user_filter.unbind()
@@ -120,15 +148,15 @@ def update_roles(
 
     # create role filter
     if len(roles_filter_list) > 0:
-        full_role_filter = (
-            f"(&(objectclass=NDRoleAssociation)(|{''.join(['(cn=' + role + ')' for role in roles_filter_list])}))"
-        )
+        full_role_filter = f"(&(objectclass=NDRoleAssociation)(|{''.join(['(cn=' + role + ')' for role in roles_filter_list])}))"
     else:
         full_role_filter = "(&(objectclass=NDRoleAssociation)(cn=*))"
 
     # Search for roles matching the role_filter
     ldap_connection_role_filter = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
     )
 
     ldap_connection_role_filter.search(
@@ -138,7 +166,14 @@ def update_roles(
         dereference_aliases=DEREF_NEVER,
     )
     roles_found = sorted(
-        list(set([entry.entry_dn.split(",")[1].split("=")[1] for entry in ldap_connection_role_filter.entries]))
+        list(
+            set(
+                [
+                    entry.entry_dn.split(",")[1].split("=")[1]
+                    for entry in ldap_connection_role_filter.entries
+                ]
+            )
+        )
     )
     log.debug("users found from roles filter: ")
     log.debug(roles_found)
@@ -157,7 +192,9 @@ def update_roles(
     log.debug(cartesian_product)
 
     ldap_connection_action = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
     )
 
     for item in cartesian_product:
@@ -178,7 +215,9 @@ def update_roles(
                 log.error(f"Failed to add role '{item[1]}' to user '{item[0]}'")
                 log.debug(ldap_connection_action.result)
         elif remove:
-            ldap_connection_action.delete(f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}")
+            ldap_connection_action.delete(
+                f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}"
+            )
             if ldap_connection_action.result["result"] == 0:
                 log.info(f"Successfully removed role '{item[1]}' from user '{item[0]}'")
             elif ldap_connection_action.result["result"] == 32:
@@ -239,10 +278,14 @@ def update_roles(
 def deactivate_crc_users(user_ou, root_dn):
     log.info("Deactivating CRC users")
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
     )
 
-    user_filter = "(userSector=private)(!(userSector=public))(!(endDate=*))(objectclass=NDUser)"
+    user_filter = (
+        "(userSector=private)(!(userSector=public))(!(endDate=*))(objectclass=NDUser)"
+    )
 
     home_areas = [
         [
@@ -297,9 +340,7 @@ def deactivate_crc_users(user_ou, root_dn):
     connection = cli.database.connection()
     for user_dn in all_users:
         try:
-            update_sql = (
-                f"UPDATE USER_ SET END_DATE=TRUNC(CURRENT_DATE) WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user_dn)"
-            )
+            update_sql = f"UPDATE USER_ SET END_DATE=TRUNC(CURRENT_DATE) WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user_dn)"
             update_cursor = connection.cursor()
             update_cursor.execute(update_sql, [user_dn])
             update_cursor.close()

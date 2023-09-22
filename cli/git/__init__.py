@@ -12,16 +12,27 @@ def get_access_token(app_id, private_key, installation_id):
     jwt_token = jwt.encode(payload, private_key, algorithm="RS256")
 
     # Exchange the JWT for an installation access token
-    headers = {"Authorization": f"Bearer {jwt_token}", "Accept": "application/vnd.github.v3+json"}
+    headers = {
+        "Authorization": f"Bearer {jwt_token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
     response = requests.post(
-        f"https://api.github.com/app/installations/{installation_id}/access_tokens", headers=headers
+        f"https://api.github.com/app/installations/{installation_id}/access_tokens",
+        headers=headers,
     )
     # extract the token from the response
     access_token = response.json().get("token")
     return access_token
 
 
-def get_repo(url, depth="1", branch_or_tag="master", token=None, auth_type="x-access-token", dest_name="repo"):
+def get_repo(
+    url,
+    depth="1",
+    branch_or_tag="master",
+    token=None,
+    auth_type="x-access-token",
+    dest_name="repo",
+):
     # if there is an @ in the url, assume auth is already specified
     multi_options = ["--depth " + depth, "--branch " + branch_or_tag]
     if "@" in url:

@@ -19,12 +19,16 @@ import ast
 
 vars = {
     **{
-        key.replace("VAR_", "").replace("_DICT", ""): ast.literal_eval(val) if "DICT" in key else val
+        key.replace("VAR_", "").replace("_DICT", ""): ast.literal_eval(val)
+        if "DICT" in key
+        else val
         for key, val in dotenv_values(".vars").items()
         if val is not None
     },  # load development variables
     **{
-        key.replace("VAR_", "").replace("_DICT", ""): ast.literal_eval(val) if "DICT" in key else val
+        key.replace("VAR_", "").replace("_DICT", ""): ast.literal_eval(val)
+        if "DICT" in key
+        else val
         for key, val in os.environ.items()
         if key.startswith("VAR_") and val is not None
     },
@@ -32,14 +36,18 @@ vars = {
 # loads all environment variables starting with SECRET_ into a dictionary
 secrets = {
     **{
-        key.replace("SECRET_", "").replace("_DICT", "").replace("SSM_", ""): ast.literal_eval(val)
+        key.replace("SECRET_", "")
+        .replace("_DICT", "")
+        .replace("SSM_", ""): ast.literal_eval(val)
         if "_DICT" in key
         else val
         for key, val in dotenv_values(".secrets").items()
         if val is not None
     },
     **{
-        key.replace("SECRET_", "").replace("_DICT", "").replace("SSM_", ""): ast.literal_eval(val)
+        key.replace("SECRET_", "")
+        .replace("_DICT", "")
+        .replace("SSM_", ""): ast.literal_eval(val)
         if "DICT" in key
         else val
         for key, val in os.environ.items()

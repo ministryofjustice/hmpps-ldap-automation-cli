@@ -6,7 +6,11 @@ def ldap_connect(ldap_host, ldap_user, ldap_password):
     server = Server(ldap_host)
 
     return Connection(
-        server=server, user=ldap_user, password=ldap_password, auto_bind="NO_TLS", authentication="SIMPLE"
+        server=server,
+        user=ldap_user,
+        password=ldap_password,
+        auto_bind="NO_TLS",
+        authentication="SIMPLE",
     )
 
 

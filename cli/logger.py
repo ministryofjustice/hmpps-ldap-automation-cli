@@ -8,12 +8,17 @@ def configure_logging():
 
         def __init__(self, format_str=None, datefmt_str=None):
             super().__init__(fmt=format_str, datefmt=datefmt_str)
-            self._secrets_set = set(cli.env.secrets.values())  # Retrieve secrets set here
+            self._secrets_set = set(
+                cli.env.secrets.values()
+            )  # Retrieve secrets set here
             self.default_msec_format = "%s.%03d"
 
         def _filter(self, s):
             redacted = " ".join(
-                ["*" * len(string) if string in self._secrets_set else string for string in s.split(" ")]
+                [
+                    "*" * len(string) if string in self._secrets_set else string
+                    for string in s.split(" ")
+                ]
             )
 
             return redacted
@@ -24,7 +29,10 @@ def configure_logging():
 
     print("configure_logging")
     """Configure logging based on environment variables."""
-    format = cli.env.vars.get("LOG_FORMAT") or "%(asctime)s.%(msecs)03d - %(levelname)s: %(message)s"
+    format = (
+        cli.env.vars.get("LOG_FORMAT")
+        or "%(asctime)s.%(msecs)03d - %(levelname)s: %(message)s"
+    )
     datefmt = cli.env.vars.get("LOG_DATE_FORMAT") or "%Y-%m-%d %H:%M:%S"
 
     log = logging.getLogger(__name__)
