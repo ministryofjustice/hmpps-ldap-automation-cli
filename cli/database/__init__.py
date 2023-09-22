@@ -1,6 +1,10 @@
 import oracledb
-from cli import env
-from cli.logger import log
+from cli import (
+    env,
+)
+from cli.logger import (
+    log,
+)
 
 
 def connection():

@@ -1,0 +1,16 @@
+[tool.black]
+# PEP-8 line length is not very practical
+line-length = 88
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.py_cache
+  | \venv
+)/
+'''
+
+[tool.codespell]
+skip = './venv,./rbac,./rendered'
+count = ''
+quiet-level = 3
