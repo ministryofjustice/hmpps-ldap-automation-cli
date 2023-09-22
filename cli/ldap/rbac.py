@@ -23,11 +23,6 @@ ldap_config = {
     "base_groups_ou": "groups",
 }
 
-"""
-Get the rbac repo from github. repo_tag can be overridden by passing in the tag via the click command.
-:param repo_tag: the tag to get from the rbac repo
-:return: the git repo object
-"""
 #### example for token auth
 # def get_repo_with_token(repo_tag="master"):
 #   app_id = env.vars.get("GH_APP_ID")
@@ -37,6 +32,11 @@ Get the rbac repo from github. repo_tag can be overridden by passing in the tag 
 
 
 def get_repo(repo_tag="master"):
+    """
+    Get the rbac repo from github. repo_tag can be overridden by passing in the tag via the click command.
+    :param repo_tag: the tag to get from the rbac repo
+    :return: the git repo object
+    """
     url = "https://github.com/ministryofjustice/hmpps-ndelius-rbac.git"
     try:
         repo = git.get_repo(url, dest_name="rbac", branch_or_tag=repo_tag)
@@ -46,15 +46,14 @@ def get_repo(repo_tag="master"):
         return None
 
 
-"""
-Prepares the rbac ldif and j2 files for templating by replacing strings in the files. This can be overridden by setting the VARS_RBAC_SUBSTITUTIONS_DICT environment variable
-:param files: the list of files to prepare for templating
-:param strings: the dictionary of strings to replace in the files
-:return: -
-"""
-
-
 def prep_for_templating(files, strings=None):
+    """
+    Prepares the rbac ldif and j2 files for templating by replacing strings in the files. This can be overridden by setting the VARS_RBAC_SUBSTITUTIONS_DICT environment variable
+    :param files: the list of files to prepare for templating
+    :param strings: the dictionary of strings to replace in the files
+    :return: -
+    """
+
     rbac_substitutions = {
         "bind_password_hash.stdout": "bind_password_hash",
         r"ldap_config.base_users | regex_replace('^.+?=(.+?),.*$', '\\1')": "ldap_config.base_users_ou",
@@ -85,14 +84,12 @@ def prep_for_templating(files, strings=None):
             )
 
 
-"""
-Template the rbac ldif and j2 files using jinja. Makes use of the cli.template.render and cli.template.save helper methods.
-:param files: the list of files to template
-:return: the list of rendered files
-"""
-
-
 def template_rbac(files):
+    """
+    Template the rbac ldif and j2 files using jinja. Makes use of the cli.template.render and cli.template.save helper methods.
+    :param files: the list of files to template
+    :return: the list of rendered files
+    """
     hashed_pwd_admin_user = ldap3.utils.hashed.hashed(ldap3.HASHED_SALTED_SHA, env.secrets.get("LDAP_ADMIN_PASSWORD"))
     rendered_files = []
 
@@ -111,14 +108,12 @@ def template_rbac(files):
     return rendered_files
 
 
-"""
-Apply the context.ldif file to the ldap server using ldap3 and the ldif3 parser.
-:param rendered_files: the list of rendered files to search for the context ldif
-:return: -
-"""
-
-
 def context_ldif(rendered_files):
+    """
+    Apply the context.ldif file to the ldap server using ldap3 and the ldif3 parser.
+    :param rendered_files: the list of rendered files to search for the context ldif
+    :return: -
+    """
     context_file = [file for file in rendered_files if "context" in Path(file).name]
     for file in context_file:
         parser = LDIFParser(open(file, "rb"), strict=False)
@@ -142,14 +137,12 @@ def context_ldif(rendered_files):
                 raise Exception(f"Failed to add  {dn}... {record}")
 
 
-"""
-Apply the groups.ldif file to the ldap server using ldap3 and the ldif3 parser.
-:param rendered_files: the list of rendered files to search for the groups ldif
-:return: -
-"""
-
-
 def group_ldifs(rendered_files):
+    """
+    Apply the groups.ldif file to the ldap server using ldap3 and the ldif3 parser.
+    :param rendered_files: the list of rendered files to search for the groups ldif
+    :return: -
+    """
     # connect to ldap
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
@@ -180,14 +173,13 @@ def group_ldifs(rendered_files):
                     raise Exception(f"Failed to add  {dn}... {record}")
 
 
-"""
-Apply the policies.ldif file to the ldap server using ldap3 and the ldif3 parser.
-:param rendered_files: the list of rendered files to search for the policies ldif
-:return: -
-"""
-
-
 def policy_ldifs(rendered_files):
+    """
+    Apply the policies.ldif file to the ldap server using ldap3 and the ldif3 parser.
+    :param rendered_files: the list of rendered files to search for the policies ldif
+    :return: -
+    """
+
     # connect to ldap
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
@@ -220,14 +212,13 @@ def policy_ldifs(rendered_files):
                 raise Exception(f"Failed to add  {dn}... {record}")
 
 
-"""
-Apply the roles.ldif file to the ldap server using ldap3 and the ldif3 parser.
-:param rendered_files: the list of rendered files to search for the roles ldif
-:return: -
-"""
-
-
 def role_ldifs(rendered_files):
+    """
+    Apply the roles.ldif file to the ldap server using ldap3 and the ldif3 parser.
+    :param rendered_files: the list of rendered files to search for the roles ldif
+    :return: -
+    """
+
     # connect to ldap
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
@@ -343,15 +334,14 @@ def user_ldifs(rendered_files):
                 raise Exception(f"Failed to add  {dn}... {record}")
 
 
-"""
-Main function for rbac. This is what is called from the click command.
-:param rbac_repo_tag: the tag to get from the rbac repo
-:param clone_path: the path to clone the rbac repo to
-:return: -
-"""
-
-
 def main(rbac_repo_tag, clone_path="./rbac"):
+    """
+    Main function for rbac. This is what is called from the click command.
+    :param rbac_repo_tag: the tag to get from the rbac repo
+    :param clone_path: the path to clone the rbac repo to
+    :return: -
+    """
+
     repo = get_repo(rbac_repo_tag)
     files = [
         file
