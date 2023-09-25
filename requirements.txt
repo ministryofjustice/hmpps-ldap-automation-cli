@@ -3,7 +3,7 @@ ldap3
 oracledb==1.4
 ansible-runner
 PyGithub
-GitPython
+GitPython==3.1.37
 pyjwt
 python-dotenv
 Jinja2
