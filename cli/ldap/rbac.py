@@ -158,7 +158,7 @@ def context_ldif(
                 log.debug(ldap_connection.result["result"])
             except Exception as e:
                 log.exception(f"Failed to add  {dn}... {record}")
-                raise (e)
+                raise e
 
             if ldap_connection.result["result"] == 0:
                 log.info("successfully added context")
@@ -210,7 +210,7 @@ def group_ldifs(
                 )
             except Exception as e:
                 log.exception(f"Failed to add  {dn}... {record}")
-                raise (e)
+                raise e
 
             if record.get("description"):
                 log.info(f"Updating description for {record}")
@@ -228,7 +228,7 @@ def group_ldifs(
                     )
                 except Exception as e:
                     log.exception(f"Failed to add  {dn}... {record}")
-                    raise (e)
+                    raise e
 
                 if ldap_connection.result["result"] == 0:
                     log.info(f"Successfully added groups")
@@ -284,7 +284,7 @@ def policy_ldifs(
                 )
             except Exception as e:
                 log.exception(f"Failed to add  {dn}... {record}")
-                raise (e)
+                raise e
 
             if ldap_connection.result["result"] == 0:
                 log.info(f"Successfully added policies")
@@ -343,7 +343,7 @@ def role_ldifs(
                 )
             except Exception as e:
                 log.exception(f"Failed to add  {dn}... {record}")
-                raise (e)
+                raise e
 
             if ldap_connection.result["result"] == 0:
                 log.info(f"Successfully added roles")
@@ -401,7 +401,7 @@ def schema_ldifs(
                 )
             except Exception as e:
                 log.exception(f"Failed to add  {dn}... {record}")
-                raise (e)
+                raise e
 
             if ldap_connection.result["result"] == 0:
                 log.info(f"Successfully added schemas")
@@ -425,7 +425,7 @@ def user_ldifs(
         )
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
-        raise (e)
+        raise e
 
     user_files = [file for file in rendered_files if "-users" in Path(file).name]
 
@@ -452,7 +452,7 @@ def user_ldifs(
                 )
             except Exception as e:
                 log.exception(f"Failed to search {dn}")
-                raise (e)
+                raise e
 
             #  delete child entries
             try:
@@ -461,13 +461,13 @@ def user_ldifs(
                     ldap_connection.delete(entry.entry_dn)
             except Exception as e:
                 log.exception(f"Failed to delete {entry.entry_dn}")
-                raise (e)
+                raise e
 
             try:
                 ldap_connection.delete(dn)
             except Exception as e:
                 log.exception(f"Failed to delete {dn}")
-                raise (e)
+                raise e
 
     # loop through the user files
     for file in user_files:
@@ -494,7 +494,7 @@ def user_ldifs(
                 )
             except Exception as e:
                 log.exception(f"Failed to add  {dn}... {record}")
-                raise (e)
+                raise e
 
             if ldap_connection.result["result"] == 0:
                 log.info(f"Successfully added users")

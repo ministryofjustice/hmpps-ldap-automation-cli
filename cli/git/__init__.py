@@ -39,7 +39,7 @@ def get_access_token(
         logging.exception(
             f"Failed to get access token. An exception of type {type(e).__name__} occurred: {e}"
         )
-        raise (e)
+        raise e
 
     # extract the token from the response
     access_token = response.json().get("token")
@@ -71,7 +71,7 @@ def get_repo(
             logging.exception(
                 f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}"
             )
-            raise (e)
+            raise e
     # if there is a token, assume auth is required and use the token and auth_type
     elif token:
         templated_url = f'https://{auth_type}:{token}@{url.split("//")[1]}'
@@ -86,7 +86,7 @@ def get_repo(
             logging.exception(
                 f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}"
             )
-            raise (e)
+            raise e
     # if there is no token, assume auth is not required and clone without
     else:
         logging.info("cloning without auth")
@@ -100,4 +100,4 @@ def get_repo(
             logging.exception(
                 f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}"
             )
-            raise (e)
+            raise e
