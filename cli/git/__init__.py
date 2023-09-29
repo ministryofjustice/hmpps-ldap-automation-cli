@@ -30,10 +30,17 @@ def get_access_token(
         "Authorization": f"Bearer {jwt_token}",
         "Accept": "application/vnd.github.v3+json",
     }
-    response = requests.post(
-        f"https://api.github.com/app/installations/{installation_id}/access_tokens",
-        headers=headers,
-    )
+    try:
+        response = requests.post(
+            f"https://api.github.com/app/installations/{installation_id}/access_tokens",
+            headers=headers,
+        )
+    except Exception as e:
+        logging.exception(
+            f"Failed to get access token. An exception of type {type(e).__name__} occurred: {e}"
+        )
+        raise (e)
+
     # extract the token from the response
     access_token = response.json().get("token")
     return access_token
@@ -54,25 +61,43 @@ def get_repo(
     ]
     if "@" in url:
         logging.info("auth already specified in url")
-        return Repo.clone_from(
-            url,
-            dest_name,
-            multi_options=multi_options,
-        )
+        try:
+            return Repo.clone_from(
+                url,
+                dest_name,
+                multi_options=multi_options,
+            )
+        except Exception as e:
+            logging.exception(
+                f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}"
+            )
+            raise (e)
     # if there is a token, assume auth is required and use the token and auth_type
     elif token:
         templated_url = f'https://{auth_type}:{token}@{url.split("//")[1]}'
         logging.info(f"cloning with token: {templated_url}")
-        return Repo.clone_from(
-            templated_url,
-            dest_name,
-            multi_options=multi_options,
-        )
+        try:
+            return Repo.clone_from(
+                templated_url,
+                dest_name,
+                multi_options=multi_options,
+            )
+        except Exception as e:
+            logging.exception(
+                f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}"
+            )
+            raise (e)
     # if there is no token, assume auth is not required and clone without
     else:
         logging.info("cloning without auth")
-        return Repo.clone_from(
-            url,
-            dest_name,
-            multi_options=multi_options,
-        )
+        try:
+            return Repo.clone_from(
+                url,
+                dest_name,
+                multi_options=multi_options,
+            )
+        except Exception as e:
+            logging.exception(
+                f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}"
+            )
+            raise (e)
