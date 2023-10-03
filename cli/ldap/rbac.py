@@ -82,11 +82,12 @@ def prep_for_templating(
 
     for file_path in files:
         file = Path(file_path)
+        log.info("Replacing strings in rbac files")
         for (
             k,
             v,
         ) in strings.items():
-            log.info(f"replacing {k} with {v} in {file_path}")
+            log.debug(f"replacing {k} with {v} in {file_path}")
             file.write_text(
                 file.read_text().replace(
                     k,
@@ -161,7 +162,7 @@ def context_ldif(
                 raise e
 
             if ldap_connection.result["result"] == 0:
-                log.info("successfully added context")
+                log.info("Successfully added context")
             elif ldap_connection.result["result"] == 68:
                 log.info(f"{dn} already exists")
             else:
@@ -275,7 +276,7 @@ def policy_ldifs(
             dn,
             record,
         ) in parser.parse():
-            log.info(f"got entry record: {dn}")
+            log.info(f"Got entry record: {dn}")
             # add the record to ldap
             try:
                 ldap_connection.add(
@@ -334,7 +335,7 @@ def role_ldifs(
             dn,
             record,
         ) in parser.parse():
-            log.info(f"got entry record: {dn}")
+            log.info(f"Got entry record: {dn}")
             # add the record to ldap
             try:
                 ldap_connection.add(
@@ -392,7 +393,7 @@ def schema_ldifs(
             dn,
             record,
         ) in parser.parse():
-            log.info(f"got entry record: {dn}")
+            log.info(f"Got entry record: {dn}")
             # add the record to ldap
             try:
                 ldap_connection.add(
@@ -441,7 +442,7 @@ def user_ldifs(
         )
         # loop through the records
         for (dn,) in parser.parse():
-            log.info(f"got entry record: {dn}")
+            log.info(f"Got entry record: {dn}")
 
             # for each user find child entries
             try:
@@ -484,7 +485,7 @@ def user_ldifs(
             dn,
             record,
         ) in parser.parse():
-            log.info(f"got entry record: {dn}")
+            log.info(f"Got entry record: {dn}")
 
             # add the record to ldap
             try:
