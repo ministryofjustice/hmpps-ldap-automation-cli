@@ -114,23 +114,28 @@ def add_roles_to_user(
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
     for role in roles:
-        ldap_connection.add(
-            f"cn={role},cn={username},{user_ou},{root_dn}",
-            attributes={
-                "objectClass": [
-                    "NDRoleAssociation",
-                    "alias",
-                ],
-                "aliasedObjectName": f"cn={role},cn={username},cn=ndRoleCatalogue,{user_ou},{root_dn}",
-            },
-        )
+        try:
+            ldap_connection.add(
+                f"cn={role},cn={username},{user_ou},{root_dn}",
+                attributes={
+                    "objectClass": [
+                        "NDRoleAssociation",
+                        "alias",
+                    ],
+                    "aliasedObjectName": f"cn={role},cn={username},cn=ndRoleCatalogue,{user_ou},{root_dn}",
+                },
+            )
+        except Exception as e:
+            log.exception(f"Failed to add role {role} to user {username}")
+            raise e
+
         if ldap_connection.result["result"] == 0:
-            print(f"Successfully added role {role} to user {username}")
+            log.info(f"Successfully added role {role} to user {username}")
         elif ldap_connection.result["result"] == 68:
-            print(f"Role {role} already exists for user {username}")
+            log.info(f"Role {role} already exists for user {username}")
         else:
-            print(ldap_connection.result)
-            print(ldap_connection.response)
+            log.debug(ldap_connection.result)
+            log.debug(ldap_connection.response)
             raise Exception(f"Failed to add role {role} to user {username}")
 
 
@@ -141,16 +146,20 @@ def process_user_roles_list(
 ):
     log.info(f"secrets: {env.secrets}")
     user_roles = parse_user_role_list(user_role_list)
-    for (
-        user,
-        roles,
-    ) in user_roles.items():
-        add_roles_to_user(
+    try:
+        for (
             user,
             roles,
-            user_ou,
-            root_dn,
-        )
+        ) in user_roles.items():
+            add_roles_to_user(
+                user,
+                roles,
+                user_ou,
+                root_dn,
+            )
+    except Exception as e:
+        log.exception(f"Failed to add role to user")
+        raise e
 
 
 #########################################
@@ -172,23 +181,33 @@ def update_roles(
     if update_notes and (user_note is None or len(user_note) < 1):
         log.error("User note must be provided when updating notes")
         raise Exception("User note must be provided when updating notes")
-    ldap_connection_user_filter = ldap_connect(
-        env.vars.get("LDAP_HOST"),
-        env.vars.get("LDAP_USER"),
-        env.secrets.get("LDAP_BIND_PASSWORD"),
-    )
+
+    try:
+        ldap_connection_user_filter = ldap_connect(
+            env.vars.get("LDAP_HOST"),
+            env.vars.get("LDAP_USER"),
+            env.secrets.get("LDAP_BIND_PASSWORD"),
+        )
+    except Exception as e:
+        log.exception("Failed to connect to LDAP")
+        raise e
 
     # # Search for users matching the user_filter
-    ldap_connection_user_filter.search(
-        ",".join(
-            [
-                user_ou,
-                root_dn,
-            ]
-        ),
-        user_filter,
-        attributes=["cn"],
-    )
+    try:
+        ldap_connection_user_filter.search(
+            ",".join(
+                [
+                    user_ou,
+                    root_dn,
+                ]
+            ),
+            user_filter,
+            attributes=["cn"],
+        )
+    except Exception as e:
+        log.exception("Failed to search for users")
+        raise e
+
     users_found = sorted(
         [
             entry.cn.value
@@ -210,23 +229,33 @@ def update_roles(
         full_role_filter = "(&(objectclass=NDRoleAssociation)(cn=*))"
 
     # Search for roles matching the role_filter
-    ldap_connection_role_filter = ldap_connect(
-        env.vars.get("LDAP_HOST"),
-        env.vars.get("LDAP_USER"),
-        env.secrets.get("LDAP_BIND_PASSWORD"),
-    )
 
-    ldap_connection_role_filter.search(
-        ",".join(
-            [
-                user_ou,
-                root_dn,
-            ]
-        ),
-        full_role_filter,
-        attributes=["cn"],
-        dereference_aliases=DEREF_NEVER,
-    )
+    try:
+        ldap_connection_role_filter = ldap_connect(
+            env.vars.get("LDAP_HOST"),
+            env.vars.get("LDAP_USER"),
+            env.secrets.get("LDAP_BIND_PASSWORD"),
+        )
+    except Exception as e:
+        log.exception("Failed to connect to LDAP")
+        raise e
+
+    try:
+        ldap_connection_role_filter.search(
+            ",".join(
+                [
+                    user_ou,
+                    root_dn,
+                ]
+            ),
+            full_role_filter,
+            attributes=["cn"],
+            dereference_aliases=DEREF_NEVER,
+        )
+    except Exception as e:
+        log.exception("Failed to search for roles")
+        raise e
+
     roles_found = sorted(
         set(
             {
@@ -256,32 +285,40 @@ def update_roles(
     log.debug("cartesian product: ")
     log.debug(cartesian_product)
 
-    ldap_connection_action = ldap_connect(
-        env.vars.get("LDAP_HOST"),
-        env.vars.get("LDAP_USER"),
-        env.secrets.get("LDAP_BIND_PASSWORD"),
-    )
+    try:
+        ldap_connection_action = ldap_connect(
+            env.vars.get("LDAP_HOST"),
+            env.vars.get("LDAP_USER"),
+            env.secrets.get("LDAP_BIND_PASSWORD"),
+        )
+    except Exception as e:
+        log.exception("Failed to connect to LDAP")
+        raise e
 
     for item in cartesian_product:
         if add:
-            ldap_connection_action.add(
-                f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}",
-                attributes={
-                    "cn": item[1],
-                    "aliasedObjectName": f"cn={item[1]},cn=ndRoleCatalogue,{user_ou},{root_dn}",
-                    "objectClass": [
-                        "NDRoleAssociation",
-                        "alias",
-                        "top",
-                    ],
-                },
-            )
+            try:
+                ldap_connection_action.add(
+                    f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}",
+                    attributes={
+                        "cn": item[1],
+                        "aliasedObjectName": f"cn={item[1]},cn=ndRoleCatalogue,{user_ou},{root_dn}",
+                        "objectClass": [
+                            "NDRoleAssociation",
+                            "alias",
+                            "top",
+                        ],
+                    },
+                )
+            except Exception as e:
+                log.exception(f"Failed to add role '{item[1]}' to user '{item[0]}'")
+                raise e
             if ldap_connection_action.result["result"] == 0:
                 log.info(f"Successfully added role '{item[1]}' to user '{item[0]}'")
             elif ldap_connection_action.result["result"] == 68:
                 log.info(f"Role '{item[1]}' already present for user '{item[0]}'")
             else:
-                log.error(f"Failed to add role '{item[1]}' to user '{item[0]}'")
+                log.e(f"Failed to add role '{item[1]}' to user '{item[0]}'")
                 log.debug(ldap_connection_action.result)
         elif remove:
             ldap_connection_action.delete(

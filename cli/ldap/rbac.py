@@ -79,23 +79,15 @@ def prep_for_templating(
 
     if strings is None:
         strings = env.vars.get("RBAC_SUBSTITUTIONS") or rbac_substitutions
-    # get a list of files
-    # print(strings)
-    # print(type(strings))
+
     for file_path in files:
         file = Path(file_path)
+        log.info("Replacing strings in rbac files")
         for (
             k,
             v,
         ) in strings.items():
-            print(
-                "replacing",
-                k,
-                "with",
-                v,
-                "in",
-                file_path,
-            )
+            log.debug(f"replacing {k} with {v} in {file_path}")
             file.write_text(
                 file.read_text().replace(
                     k,
@@ -147,25 +139,35 @@ def context_ldif(
             dn,
             record,
         ) in parser.parse():
-            print("got entry record: %s" % dn)
-            print(record)
-            ldap_connection = ldap_connect(
-                env.vars.get("LDAP_HOST"),
-                env.vars.get("LDAP_USER"),
-                env.secrets.get("LDAP_BIND_PASSWORD"),
-            )
-            ldap_connection.add(
-                dn,
-                attributes=record,
-            )
-            print(ldap_connection.result["result"])
+            log.info(f"got entry record: {dn}")
+            log.debug(record)
+            try:
+                ldap_connection = ldap_connect(
+                    env.vars.get("LDAP_HOST"),
+                    env.vars.get("LDAP_USER"),
+                    env.secrets.get("LDAP_BIND_PASSWORD"),
+                )
+            except Exception as e:
+                log.exception(f"Failed to connect to ldap")
+                raise e
+
+            try:
+                ldap_connection.add(
+                    dn,
+                    attributes=record,
+                )
+                log.debug(ldap_connection.result["result"])
+            except Exception as e:
+                log.exception(f"Failed to add  {dn}... {record}")
+                raise e
+
             if ldap_connection.result["result"] == 0:
-                print(f"Successfully added context")
+                log.info("Successfully added context")
             elif ldap_connection.result["result"] == 68:
-                print(f"{dn} already exists")
+                log.info(f"{dn} already exists")
             else:
-                print(ldap_connection.result)
-                print(ldap_connection.response)
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
                 raise Exception(f"Failed to add  {dn}... {record}")
 
 
@@ -173,11 +175,16 @@ def group_ldifs(
     rendered_files,
 ):
     # connect to ldap
-    ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"),
-        env.vars.get("LDAP_USER"),
-        env.secrets.get("LDAP_BIND_PASSWORD"),
-    )
+    try:
+        ldap_connection = ldap_connect(
+            env.vars.get("LDAP_HOST"),
+            env.vars.get("LDAP_USER"),
+            env.secrets.get("LDAP_BIND_PASSWORD"),
+        )
+    except Exception as e:
+        log.exception(f"Failed to connect to ldap")
+        raise e
+
     group_files = [file for file in rendered_files if "groups" in Path(file).name]
     # loop through the group files
     for file in group_files:
@@ -194,33 +201,43 @@ def group_ldifs(
             dn,
             record,
         ) in parser.parse():
-            print("got entry record: %s" % dn)
-            print(record)
+            log.debug(f"got entry record: {dn}")
+            log.debug(record)
             # add the record to ldap
-            ldap_connection.add(
-                dn,
-                attributes=record,
-            )
-            if record.get("description"):
-                print("updating description")
-                ldap_connection.modify(
+            try:
+                ldap_connection.add(
                     dn,
-                    {
-                        "description": [
-                            (
-                                ldap3.MODIFY_REPLACE,
-                                record["description"],
-                            )
-                        ]
-                    },
+                    attributes=record,
                 )
+            except Exception as e:
+                log.exception(f"Failed to add  {dn}... {record}")
+                raise e
+
+            if record.get("description"):
+                log.info(f"Updating description for {record}")
+                try:
+                    ldap_connection.modify(
+                        dn,
+                        {
+                            "description": [
+                                (
+                                    ldap3.MODIFY_REPLACE,
+                                    record["description"],
+                                )
+                            ]
+                        },
+                    )
+                except Exception as e:
+                    log.exception(f"Failed to add  {dn}... {record}")
+                    raise e
+
                 if ldap_connection.result["result"] == 0:
-                    print(f"Successfully added groups")
+                    log.info(f"Successfully added groups")
                 elif ldap_connection.result["result"] == 68:
-                    print(f"{dn} already exists")
+                    log.info(f"{dn} already exists")
                 else:
-                    print(ldap_connection.result)
-                    print(ldap_connection.response)
+                    log.debug(ldap_connection.result)
+                    log.debug(ldap_connection.response)
                     raise Exception(f"Failed to add  {dn}... {record}")
 
 
@@ -228,11 +245,16 @@ def policy_ldifs(
     rendered_files,
 ):
     # connect to ldap
-    ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"),
-        env.vars.get("LDAP_USER"),
-        env.secrets.get("LDAP_BIND_PASSWORD"),
-    )
+    try:
+        ldap_connection = ldap_connect(
+            env.vars.get("LDAP_HOST"),
+            env.vars.get("LDAP_USER"),
+            env.secrets.get("LDAP_BIND_PASSWORD"),
+        )
+    except Exception as e:
+        log.exception(f"Failed to connect to ldap")
+        raise e
+
     policy_files = [file for file in rendered_files if "policy" in Path(file).name]
 
     # first, delete the policies
@@ -254,20 +276,24 @@ def policy_ldifs(
             dn,
             record,
         ) in parser.parse():
-            print("got entry record: %s" % dn)
-            # print(record)
+            log.info(f"Got entry record: {dn}")
             # add the record to ldap
-            ldap_connection.add(
-                dn,
-                attributes=record,
-            )
+            try:
+                ldap_connection.add(
+                    dn,
+                    attributes=record,
+                )
+            except Exception as e:
+                log.exception(f"Failed to add  {dn}... {record}")
+                raise e
+
             if ldap_connection.result["result"] == 0:
-                print(f"Successfully added policies")
+                log.info(f"Successfully added policies")
             elif ldap_connection.result["result"] == 68:
-                print(f"{dn} already exists")
+                log.info(f"{dn} already exists")
             else:
-                print(ldap_connection.result)
-                print(ldap_connection.response)
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
                 raise Exception(f"Failed to add  {dn}... {record}")
 
 
@@ -275,11 +301,15 @@ def role_ldifs(
     rendered_files,
 ):
     # connect to ldap
-    ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"),
-        env.vars.get("LDAP_USER"),
-        env.secrets.get("LDAP_BIND_PASSWORD"),
-    )
+    try:
+        ldap_connection = ldap_connect(
+            env.vars.get("LDAP_HOST"),
+            env.vars.get("LDAP_USER"),
+            env.secrets.get("LDAP_BIND_PASSWORD"),
+        )
+    except Exception as e:
+        log.exception(f"Failed to connect to ldap")
+        raise e
     role_files = [file for file in rendered_files if "nd_role" in Path(file).name]
 
     # first, delete the roles
@@ -305,20 +335,24 @@ def role_ldifs(
             dn,
             record,
         ) in parser.parse():
-            print("got entry record: %s" % dn)
-            # print(record)
+            log.info(f"Got entry record: {dn}")
             # add the record to ldap
-            ldap_connection.add(
-                dn,
-                attributes=record,
-            )
+            try:
+                ldap_connection.add(
+                    dn,
+                    attributes=record,
+                )
+            except Exception as e:
+                log.exception(f"Failed to add  {dn}... {record}")
+                raise e
+
             if ldap_connection.result["result"] == 0:
-                print(f"Successfully added roles")
+                log.info(f"Successfully added roles")
             elif ldap_connection.result["result"] == 68:
-                print(f"{dn} already exists")
+                log.info(f"{dn} already exists")
             else:
-                print(ldap_connection.result)
-                print(ldap_connection.response)
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
                 raise Exception(f"Failed to add  {dn}... {record}")
 
 
@@ -328,11 +362,15 @@ def schema_ldifs(
     rendered_files,
 ):
     # connect to ldap
-    ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"),
-        env.vars.get("LDAP_USER"),
-        env.secrets.get("LDAP_BIND_PASSWORD"),
-    )
+    try:
+        ldap_connection = ldap_connect(
+            env.vars.get("LDAP_HOST"),
+            env.vars.get("LDAP_USER"),
+            env.secrets.get("LDAP_BIND_PASSWORD"),
+        )
+    except Exception as e:
+        log.exception(f"Failed to connect to ldap")
+        raise e
 
     schema_files = [
         file
@@ -355,20 +393,24 @@ def schema_ldifs(
             dn,
             record,
         ) in parser.parse():
-            print("got entry record: %s" % dn)
-            # print(record)
+            log.info(f"Got entry record: {dn}")
             # add the record to ldap
-            ldap_connection.add(
-                dn,
-                attributes=record,
-            )
+            try:
+                ldap_connection.add(
+                    dn,
+                    attributes=record,
+                )
+            except Exception as e:
+                log.exception(f"Failed to add  {dn}... {record}")
+                raise e
+
             if ldap_connection.result["result"] == 0:
-                print(f"Successfully added schemas")
+                log.info(f"Successfully added schemas")
             elif ldap_connection.result["result"] == 68:
-                print(f"{dn} already exists")
+                log.info(f"{dn} already exists")
             else:
-                print(ldap_connection.result)
-                print(ldap_connection.response)
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
                 raise Exception(f"Failed to add  {dn}... {record}")
 
 
@@ -376,11 +418,16 @@ def user_ldifs(
     rendered_files,
 ):
     # connect to ldap
-    ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"),
-        env.vars.get("LDAP_USER"),
-        env.secrets.get("LDAP_BIND_PASSWORD"),
-    )
+    try:
+        ldap_connection = ldap_connect(
+            env.vars.get("LDAP_HOST"),
+            env.vars.get("LDAP_USER"),
+            env.secrets.get("LDAP_BIND_PASSWORD"),
+        )
+    except Exception as e:
+        log.exception(f"Failed to connect to ldap")
+        raise e
+
     user_files = [file for file in rendered_files if "-users" in Path(file).name]
 
     # first, delete the users
@@ -395,21 +442,33 @@ def user_ldifs(
         )
         # loop through the records
         for (dn,) in parser.parse():
-            print("got entry record: %s" % dn)
+            log.info(f"Got entry record: {dn}")
 
-            # for each user find child entries and delete them
-            ldap_connection.search(
-                dn,
-                "(objectclass=*)",
-                search_scope=ldap3.SUBTREE,
-            )
-            for entry in ldap_connection.entries:
-                print(entry.entry_dn)
-                ldap_connection.delete(entry.entry_dn)
+            # for each user find child entries
+            try:
+                ldap_connection.search(
+                    dn,
+                    "(objectclass=*)",
+                    search_scope=ldap3.SUBTREE,
+                )
+            except Exception as e:
+                log.exception(f"Failed to search {dn}")
+                raise e
 
-            # print(record)
-            # add the record to ldap
-            ldap_connection.delete(dn)
+            #  delete child entries
+            try:
+                for entry in ldap_connection.entries:
+                    log.debug(entry.entry_dn)
+                    ldap_connection.delete(entry.entry_dn)
+            except Exception as e:
+                log.exception(f"Failed to delete {entry.entry_dn}")
+                raise e
+
+            try:
+                ldap_connection.delete(dn)
+            except Exception as e:
+                log.exception(f"Failed to delete {dn}")
+                raise e
 
     # loop through the user files
     for file in user_files:
@@ -426,20 +485,25 @@ def user_ldifs(
             dn,
             record,
         ) in parser.parse():
-            print("got entry record: %s" % dn)
-            # print(record)
+            log.info(f"Got entry record: {dn}")
+
             # add the record to ldap
-            ldap_connection.add(
-                dn,
-                attributes=record,
-            )
+            try:
+                ldap_connection.add(
+                    dn,
+                    attributes=record,
+                )
+            except Exception as e:
+                log.exception(f"Failed to add  {dn}... {record}")
+                raise e
+
             if ldap_connection.result["result"] == 0:
-                print(f"Successfully added users")
+                log.info(f"Successfully added users")
             elif ldap_connection.result["result"] == 68:
-                print(f"{dn} already exists")
+                log.info(f"{dn} already exists")
             else:
-                print(ldap_connection.result)
-                print(ldap_connection.response)
+                log.debug(ldap_connection.result)
+                log.debug(ldap_connection.response)
                 raise Exception(f"Failed to add  {dn}... {record}")
 
 
