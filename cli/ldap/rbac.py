@@ -372,11 +372,7 @@ def schema_ldifs(
         log.exception(f"Failed to connect to ldap")
         raise e
 
-    schema_files = [
-        file
-        for file in rendered_files
-        if "delius.ldif" or "pwm.ldif" in Path(file).name
-    ]
+    schema_files = [file for file in rendered_files if "delius.ldif" or "pwm.ldif" in Path(file).name]
 
     # loop through the schema files
     for file in schema_files:
@@ -441,7 +437,7 @@ def user_ldifs(
             strict=False,
         )
         # loop through the records
-        for (dn,) in parser.parse():
+        for dn, record in parser.parse():
             log.info(f"Got entry record: {dn}")
 
             # for each user find child entries
@@ -518,9 +514,7 @@ def main(
             f"{clone_path}/**/*",
             recursive=True,
         )
-        if Path(file).is_file()
-        and Path(file).name.endswith(".ldif")
-        or Path(file).name.endswith(".j2")
+        if Path(file).is_file() and Path(file).name.endswith(".ldif") or Path(file).name.endswith(".j2")
     ]
 
     prep_for_templating(files)
