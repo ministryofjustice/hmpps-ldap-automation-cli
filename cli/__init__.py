@@ -1,6 +1,6 @@
 import click
-import cli.ldap.rbac
-import cli.ldap.user
+import cli.ldap_cmds.rbac
+import cli.ldap_cmds.user
 
 from cli import (
     logger,
@@ -166,7 +166,7 @@ def update_user_roles(
 def rbac_uplift(
     rbac_repo_tag,
 ):
-    cli.ldap.rbac.main(rbac_repo_tag)
+    cli.ldap_cmds.rbac.main(rbac_repo_tag)
 
 
 @click.command()
