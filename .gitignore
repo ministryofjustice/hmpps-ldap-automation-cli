@@ -160,3 +160,11 @@ cython_debug/
 .idea/
 # VSCode Config
 .vscode
+
+.secrets
+.vars
+/rbac
+/rendered
+
+*.ldif
+*.ldif.j2

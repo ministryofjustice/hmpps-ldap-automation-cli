@@ -1,0 +1,34 @@
+[flake8]
+
+# PEP-8 line length is not very practical
+max-line-length = 88
+
+extend-ignore =
+    # See https://github.com/PyCQA/pycodestyle/issues/373
+    # flake8/pycodechecker give false positives on black code
+    # line break before ':' apparently gives false positives with black formatter...
+    E203,
+    # line break before binary operator, fights with black formatter...
+    W503,
+    # importing with '*' ...
+    F403,
+    # Bare exception handling, fixing in NIT-854
+    E722,
+    # Missing docstring in public nested class
+    D104,
+    # Missing docstring in public package
+    D103,
+    # f-string but no variables, e.g. print(f"hello")...
+    F541,
+    # Line too long (>79 chars), but should not be firing due to max-line-length = 120
+    E501,
+    # add docustrings
+    D100,
+    # to be corrected with NIT-854
+    B001
+
+# =====================
+# flake-quote settings:
+# =====================
+# Set this to match black style:
+inline-quotes = double

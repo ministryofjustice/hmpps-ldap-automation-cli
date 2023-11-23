@@ -1,0 +1,14 @@
+click==8.1.6
+ldap3
+oracledb==1.4
+ansible-runner
+PyGithub
+GitPython
+pyjwt
+python-dotenv
+python-ldap
+Jinja2
+pre-commit
+black
+flake8
+codespell
