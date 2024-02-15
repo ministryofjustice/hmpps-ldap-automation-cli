@@ -152,12 +152,12 @@ def context_ldif(
             attributes = entry[1]
             log.info(f"got entry record: {dn}")
             log.debug(attributes)
-
             try:
                 connection.add_s(
                     dn,
                     modlist.addModlist(attributes),
                 )
+                log.info(f"{dn} Added")
             except ldap.ALREADY_EXISTS as already_exists_e:
                 log.info(f"{dn} already exists")
                 log.debug(already_exists_e)
@@ -198,6 +198,7 @@ def group_ldifs(
                     dn,
                     modlist.addModlist(attributes),
                 )
+                log.info(f"{dn} Added")
             except ldap.ALREADY_EXISTS as already_exists_e:
                 log.info(f"{dn} already exists")
                 log.debug(already_exists_e)
@@ -269,6 +270,7 @@ def policy_ldifs(
                     dn,
                     modlist.addModlist(attributes),
                 )
+                log.info(f"{dn} Added")
             except ldap.ALREADY_EXISTS as already_exists_e:
                 log.info(f"{dn} already exists")
                 log.debug(already_exists_e)
@@ -336,6 +338,7 @@ def role_ldifs(
                     dn,
                     modlist.addModlist(attributes),
                 )
+                log.info(f"{dn} Added")
             except ldap.ALREADY_EXISTS as already_exists_e:
                 log.info(f"{dn} already exists")
                 log.debug(already_exists_e)
@@ -373,6 +376,7 @@ def schema_ldifs(
                 attributes = entry[1]
                 print(f" {entry[0]}")
                 connection.add_s(dn, modlist.addModlist(attributes))
+                log.info(f"{dn} Added")
             except ldap.ALREADY_EXISTS as already_exists_e:
                 log.info(f"{dn} already exists")
                 log.debug(already_exists_e)
@@ -414,7 +418,6 @@ def user_ldifs(
                     "(objectClass=*)",
                 )
                 tree.reverse()
-                print(tree)
                 for entry in tree:
                     try:
                         log.debug(entry[0])
@@ -436,13 +439,19 @@ def user_ldifs(
         records = ldif.LDIFRecordList(open(file, "rb"))
         records.parse()
 
-        pprint(records.all_records)
+        # pprint(records.all_records)
         # loop through the records
         for entry in records.all_records:
-            dn = entry[0]
-            attributes = entry[1]
-            print(f" {entry[0]}")
-            connection.add_s(dn, modlist.addModlist(attributes))
+            log.info(f"Got entry record: {dn}")
+            try:
+                dn = entry[0]
+                attributes = entry[1]
+                print(f" {entry[0]}")
+                connection.add_s(dn, modlist.addModlist(attributes))
+                log.info(f"{dn} Added")
+            except ldap.ALREADY_EXISTS as already_exists_e:
+                log.info(f"{dn} already exists")
+                log.debug(already_exists_e)
 
     # connect to ldap
     # try:
