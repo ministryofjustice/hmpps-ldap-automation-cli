@@ -478,3 +478,56 @@ def deactivate_crc_users(
         except:
             log.exception(f"Failed to update END_DATE for user {user_dn}")
     connection.close()
+
+def user_expiry(): 
+    date_str = f"{datetime.now().strftime("%Y%m%d")}000000Z"
+    ldap_connection_lock = ldap_connect(
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
+    )
+    ldap_connection_lock.search(
+        ",".join([
+                    user_ou,
+                    root_dn,
+                ]
+            ),
+            f"(&(!(pwdAccountLockedTime=*))(|(&(endDate=*)(!(endDate>=${date_str})))(&(startDate=*)(!(startDate<=${date_str})))))" )
+    found_users = [entry.entry_dn for entry in ldap_connection_lock.entries]
+    for user in found_users:
+        ldap_connection_lock.modify(
+            user,
+            {
+                "pwdAccountLockedTime": [
+                    (
+                        MODIFY_REPLACE,
+                        ["000001010000Z"],
+                    )
+                ]
+            },
+        )
+    ldap_connection_unlock = ldap_connect(
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
+    )
+    ldap_connection_unlock.search(
+        ",".join([
+                    user_ou,
+                    root_dn,
+                ]
+            ),
+            f"(&(pwdAccountLockedTime=000001010000Z)(|(!(endDate=*))(endDate>=${date_str}))(|(!(startDate=*))(startDate<=${date_str})))" )
+    found_users = [entry.entry_dn for entry in ldap_connection_unlock.entries]
+    for user in found_users:
+        ldap_connection_unlock.modify(
+            user,
+            {
+                "pwdAccountLockedTime": [
+                    (
+                        MODIFY_DELETE,
+                        ["000001010000Z"],
+                    )
+                ]
+            },
+        )
