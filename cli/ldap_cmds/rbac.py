@@ -418,6 +418,7 @@ def user_ldifs(
                     "(objectClass=*)",
                 )
                 tree.reverse()
+
                 for entry in tree:
                     try:
                         log.debug(entry[0])
@@ -438,7 +439,7 @@ def user_ldifs(
     for file in user_files:
         records = ldif.LDIFRecordList(open(file, "rb"))
         records.parse()
-
+        
         # pprint(records.all_records)
         # loop through the records
         for entry in records.all_records:
