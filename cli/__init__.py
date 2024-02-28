@@ -191,7 +191,9 @@ def deactivate_crc_users(
         root_dn,
     )
 
-
+@click.command()
+def user_expiry():
+    cli.ldap.user.user_expiry()
 # from cli.ldap import test
 
 main_group.add_command(add_roles_to_users)
