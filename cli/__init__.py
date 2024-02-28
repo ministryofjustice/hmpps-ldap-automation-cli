@@ -186,10 +186,27 @@ def deactivate_crc_users(
     user_ou,
     root_dn,
 ):
-    cli.ldap.user.deactivate_crc_users(
+    cli.ldap_cmds.user.deactivate_crc_users(
         user_ou,
         root_dn,
     )
+
+
+@click.command()
+@click.option(
+    "-u",
+    "--user-ou",
+    help="OU to add users to, defaults to ou=Users",
+    default="ou=Users",
+)
+@click.option(
+    "-r",
+    "--root-dn",
+    help="Root DN to add users to, defaults to dc=moj,dc=com",
+    default="dc=moj,dc=com",
+)
+def user_expiry(user_ou, root_dn):
+    cli.ldap_cmds.user.user_expiry(user_ou=user_ou, root_dn=root_dn)
 
 
 # from cli.ldap import test
@@ -199,6 +216,7 @@ main_group.add_command(rbac_uplift)
 main_group.add_command(update_user_home_areas)
 main_group.add_command(update_user_roles)
 main_group.add_command(deactivate_crc_users)
+main_group.add_command(user_expiry)
 
 logger.configure_logging()
 
