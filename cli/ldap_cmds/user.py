@@ -145,7 +145,6 @@ def process_user_roles_list(
     user_ou="ou=Users",
     root_dn="dc=moj,dc=com",
 ):
-    log.info(f"secrets: {env.secrets}")
     user_roles = parse_user_role_list(user_role_list)
     try:
         for (
