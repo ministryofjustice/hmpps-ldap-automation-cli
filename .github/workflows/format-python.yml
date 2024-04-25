@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - '**.py'
+  workflow_dispatch:
 jobs:
   format:
     runs-on: ubuntu-latest
