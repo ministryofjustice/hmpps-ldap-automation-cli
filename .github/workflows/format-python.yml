@@ -1,8 +1,7 @@
 name: Format Python
 on:
   pull_request:
-    types:
-      - [ opened, synchronize, reopened, edited, ready_for_review ]
+    types: [ opened, edited, reopened, synchronize, ready_for_review ]
   workflow_dispatch:
 jobs:
   format:
