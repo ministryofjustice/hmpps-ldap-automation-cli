@@ -1,6 +1,8 @@
 name: Format code
 on:
   pull_request:
+    paths:
+      - '**.py'
 jobs:
   format:
     runs-on: ubuntu-latest
