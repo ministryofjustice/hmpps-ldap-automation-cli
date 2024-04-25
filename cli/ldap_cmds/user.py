@@ -99,27 +99,17 @@ def parse_user_role_list(
     return {user.split(",")[0]: user.split(",")[1].split(";") for user in user_role_list.split("|")}
 
 
-def add_roles_to_user(
-    username,
-    roles,
-    user_ou="ou=Users",
-    root_dn="dc=moj,dc=com",
-):
+def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
     log.info(f"Adding roles {roles} to user {username}")
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"),
-        env.vars.get("LDAP_USER"),
-        env.secrets.get("LDAP_BIND_PASSWORD"),
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
     for role in roles:
         try:
             ldap_connection.add(
                 f"cn={role},cn={username},{user_ou},{root_dn}",
                 attributes={
-                    "objectClass": [
-                        "NDRoleAssociation",
-                        "alias",
-                    ],
+                    "objectClass": ["NDRoleAssociation", "alias"],
                     "aliasedObjectName": f"cn={role},cn={username},cn=ndRoleCatalogue,{user_ou},{root_dn}",
                 },
             )
@@ -165,15 +155,7 @@ def process_user_roles_list(
 
 
 def update_roles(
-    roles,
-    user_ou,
-    root_dn,
-    add,
-    remove,
-    update_notes,
-    user_note,
-    user_filter="(userSector=*)",
-    role_filter="*",
+    roles, user_ou, root_dn, add, remove, update_notes, user_note, user_filter="(userSector=*)", role_filter="*"
 ):
     if update_notes and (user_note is None or len(user_note) < 1):
         log.error("User note must be provided when updating notes")
@@ -192,12 +174,7 @@ def update_roles(
     # # Search for users matching the user_filter
     try:
         ldap_connection_user_filter.search(
-            ",".join(
-                [
-                    user_ou,
-                    root_dn,
-                ]
-            ),
+            ",".join([user_ou, root_dn]),
             user_filter,
             attributes=["cn"],
         )
@@ -235,12 +212,7 @@ def update_roles(
 
     try:
         ldap_connection_role_filter.search(
-            ",".join(
-                [
-                    user_ou,
-                    root_dn,
-                ]
-            ),
+            ",".join([user_ou, root_dn]),
             full_role_filter,
             attributes=["cn"],
             dereference_aliases=DEREF_NEVER,
@@ -264,12 +236,7 @@ def update_roles(
 
     # cartesian_product = [(user, role) for user in matched_users for role in roles]
 
-    cartesian_product = list(
-        product(
-            matched_users,
-            roles,
-        )
-    )
+    cartesian_product = list(product(matched_users, roles))
     log.debug("cartesian product: ")
     log.debug(cartesian_product)
 
@@ -291,11 +258,7 @@ def update_roles(
                     attributes={
                         "cn": item[1],
                         "aliasedObjectName": f"cn={item[1]},cn=ndRoleCatalogue,{user_ou},{root_dn}",
-                        "objectClass": [
-                            "NDRoleAssociation",
-                            "alias",
-                            "top",
-                        ],
+                        "objectClass": ["NDRoleAssociation", "alias", "top"],
                     },
                 )
             except Exception as e:
@@ -377,10 +340,7 @@ def update_roles(
 #########################################
 
 
-def deactivate_crc_users(
-    user_ou,
-    root_dn,
-):
+def deactivate_crc_users(user_ou, root_dn):
     log.info("Deactivating CRC users")
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
@@ -432,12 +392,7 @@ def deactivate_crc_users(
         found_users.append(entry.entry_dn for entry in ldap_connection.entries)
 
     ldap_connection.search(
-        ",".join(
-            [
-                user_ou,
-                root_dn,
-            ]
-        ),
+        ",".join([user_ou, root_dn]),
         f"(&(!(userHomeArea=*)){user_filter})",
         attributes=["dn"],
     )
@@ -480,10 +435,7 @@ def deactivate_crc_users(
     connection.close()
 
 
-def user_expiry(
-    user_ou,
-    root_dn,
-):
+def user_expiry(user_ou, root_dn):
     date_str = f"{datetime.now().strftime('%Y%m%d')}000000Z"
     log.info(f"Expiring users with end date {date_str}")
 
@@ -533,12 +485,7 @@ def user_expiry(
 
     try:
         ldap_connection_unlock.search(
-            ",".join(
-                [
-                    user_ou,
-                    root_dn,
-                ]
-            ),
+            ",".join([user_ou, root_dn]),
             f"(&(pwdAccountLockedTime=000001010000Z)(|(!(endDate=*))(endDate>={date_str}))(|(!(startDate=*))(startDate<={date_str})))",
             attributes=["cn"],
         )
@@ -565,10 +512,7 @@ def user_expiry(
             log.exception(f"Failed to unlock user {user} \n Exception: {e}")
 
 
-def remove_all_user_passwords(
-    user_ou,
-    root_dn,
-):
+def remove_all_user_passwords(user_ou, root_dn):
     log.info("Removing all user passwords")
 
     ldap_connection = ldap_connect(
@@ -581,12 +525,7 @@ def remove_all_user_passwords(
 
     try:
         ldap_connection.search(
-            ",".join(
-                [
-                    user_ou,
-                    root_dn,
-                ]
-            ),
+            ",".join([user_ou, root_dn]),
             user_filter,
             attributes=["cn"],
             search_scope="LEVEL",
