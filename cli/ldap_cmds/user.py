@@ -596,7 +596,7 @@ def remove_all_user_passwords(
         raise e
 
     found_users = [entry.entry_dn for entry in ldap_connection.entries]
-    log.debug("users found from user filter")
+    log.debug("Users found:")
     log.debug(found_users)
 
     for user in found_users:
