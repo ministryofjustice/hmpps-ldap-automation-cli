@@ -127,11 +127,7 @@ def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=co
             raise Exception(f"Failed to add role {role} to user {username}")
 
 
-def process_user_roles_list(
-    user_role_list,
-    user_ou="ou=Users",
-    root_dn="dc=moj,dc=com",
-):
+def process_user_roles_list(user_role_list, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
     user_roles = parse_user_role_list(user_role_list)
     try:
         for (
