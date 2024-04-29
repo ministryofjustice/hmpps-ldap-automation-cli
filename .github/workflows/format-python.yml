@@ -1,8 +1,7 @@
 name: Format Python
 on:
   pull_request:
-    types:
-      - [ opened, synchronize, reopened, edited, ready_for_review ]
+    types: [ opened, edited, reopened, synchronize, ready_for_review ]
   workflow_dispatch:
 jobs:
   format:
@@ -10,7 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
       - name: Format code with black
         run: |
           pip install black

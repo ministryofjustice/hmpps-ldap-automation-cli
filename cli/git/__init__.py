@@ -36,9 +36,7 @@ def get_access_token(
             headers=headers,
         )
     except Exception as e:
-        logging.exception(
-            f"Failed to get access token. An exception of type {type(e).__name__} occurred: {e}"
-        )
+        logging.exception(f"Failed to get access token. An exception of type {type(e).__name__} occurred: {e}")
         raise e
 
     # extract the token from the response
@@ -68,9 +66,7 @@ def get_repo(
                 multi_options=multi_options,
             )
         except Exception as e:
-            logging.exception(
-                f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}"
-            )
+            logging.exception(f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}")
             raise e
     # if there is a token, assume auth is required and use the token and auth_type
     elif token:
@@ -83,9 +79,7 @@ def get_repo(
                 multi_options=multi_options,
             )
         except Exception as e:
-            logging.exception(
-                f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}"
-            )
+            logging.exception(f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}")
             raise e
     # if there is no token, assume auth is not required and clone without
     else:
@@ -97,7 +91,5 @@ def get_repo(
                 multi_options=multi_options,
             )
         except Exception as e:
-            logging.exception(
-                f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}"
-            )
+            logging.exception(f"Failed to clone repo. An exception of type {type(e).__name__} occurred: {e}")
             raise e
