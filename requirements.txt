@@ -7,5 +7,5 @@ pyjwt==2.8.0
 python-dotenv==1.0
 Jinja2==3.1.4
 python-ldap
-requests==2.31.0
+requests==2.32.2
 setuptools==69
