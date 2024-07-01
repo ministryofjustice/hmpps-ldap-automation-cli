@@ -14,6 +14,7 @@ from cli.ldap_cmds import (
 )
 from ldap3 import (
     MODIFY_REPLACE,
+    MODIFY_DELETE,
     DEREF_NEVER,
 )
 
@@ -98,27 +99,17 @@ def parse_user_role_list(
     return {user.split(",")[0]: user.split(",")[1].split(";") for user in user_role_list.split("|")}
 
 
-def add_roles_to_user(
-    username,
-    roles,
-    user_ou="ou=Users",
-    root_dn="dc=moj,dc=com",
-):
+def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
     log.info(f"Adding roles {roles} to user {username}")
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"),
-        env.vars.get("LDAP_USER"),
-        env.secrets.get("LDAP_BIND_PASSWORD"),
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
     for role in roles:
         try:
             ldap_connection.add(
                 f"cn={role},cn={username},{user_ou},{root_dn}",
                 attributes={
-                    "objectClass": [
-                        "NDRoleAssociation",
-                        "alias",
-                    ],
+                    "objectClass": ["NDRoleAssociation", "alias"],
                     "aliasedObjectName": f"cn={role},cn={username},cn=ndRoleCatalogue,{user_ou},{root_dn}",
                 },
             )
@@ -136,11 +127,7 @@ def add_roles_to_user(
             raise Exception(f"Failed to add role {role} to user {username}")
 
 
-def process_user_roles_list(
-    user_role_list,
-    user_ou="ou=Users",
-    root_dn="dc=moj,dc=com",
-):
+def process_user_roles_list(user_role_list, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
     user_roles = parse_user_role_list(user_role_list)
     try:
         for (
@@ -164,15 +151,7 @@ def process_user_roles_list(
 
 
 def update_roles(
-    roles,
-    user_ou,
-    root_dn,
-    add,
-    remove,
-    update_notes,
-    user_note,
-    user_filter="(userSector=*)",
-    role_filter="*",
+    roles, user_ou, root_dn, add, remove, update_notes, user_note, user_filter="(userSector=*)", role_filter="*"
 ):
     if update_notes and (user_note is None or len(user_note) < 1):
         log.error("User note must be provided when updating notes")
@@ -191,12 +170,7 @@ def update_roles(
     # # Search for users matching the user_filter
     try:
         ldap_connection_user_filter.search(
-            ",".join(
-                [
-                    user_ou,
-                    root_dn,
-                ]
-            ),
+            ",".join([user_ou, root_dn]),
             user_filter,
             attributes=["cn"],
         )
@@ -234,12 +208,7 @@ def update_roles(
 
     try:
         ldap_connection_role_filter.search(
-            ",".join(
-                [
-                    user_ou,
-                    root_dn,
-                ]
-            ),
+            ",".join([user_ou, root_dn]),
             full_role_filter,
             attributes=["cn"],
             dereference_aliases=DEREF_NEVER,
@@ -263,12 +232,7 @@ def update_roles(
 
     # cartesian_product = [(user, role) for user in matched_users for role in roles]
 
-    cartesian_product = list(
-        product(
-            matched_users,
-            roles,
-        )
-    )
+    cartesian_product = list(product(matched_users, roles))
     log.debug("cartesian product: ")
     log.debug(cartesian_product)
 
@@ -290,11 +254,7 @@ def update_roles(
                     attributes={
                         "cn": item[1],
                         "aliasedObjectName": f"cn={item[1]},cn=ndRoleCatalogue,{user_ou},{root_dn}",
-                        "objectClass": [
-                            "NDRoleAssociation",
-                            "alias",
-                            "top",
-                        ],
+                        "objectClass": ["NDRoleAssociation", "alias", "top"],
                     },
                 )
             except Exception as e:
@@ -376,10 +336,7 @@ def update_roles(
 #########################################
 
 
-def deactivate_crc_users(
-    user_ou,
-    root_dn,
-):
+def deactivate_crc_users(user_ou, root_dn):
     log.info("Deactivating CRC users")
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
@@ -431,12 +388,7 @@ def deactivate_crc_users(
         found_users.append(entry.entry_dn for entry in ldap_connection.entries)
 
     ldap_connection.search(
-        ",".join(
-            [
-                user_ou,
-                root_dn,
-            ]
-        ),
+        ",".join([user_ou, root_dn]),
         f"(&(!(userHomeArea=*)){user_filter})",
         attributes=["dn"],
     )
@@ -477,3 +429,126 @@ def deactivate_crc_users(
         except:
             log.exception(f"Failed to update END_DATE for user {user_dn}")
     connection.close()
+
+
+def user_expiry(user_ou, root_dn):
+    date_str = f"{datetime.now().strftime('%Y%m%d')}000000Z"
+    log.info(f"Expiring users with end date {date_str}")
+
+    ldap_connection_lock = ldap_connect(
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
+    )
+    try:
+        ldap_connection_lock.search(
+            ",".join(
+                [
+                    user_ou,
+                    root_dn,
+                ]
+            ),
+            f"(&(!(pwdAccountLockedTime=*))(|(&(endDate=*)(!(endDate>={date_str})))(&(startDate=*)(!(startDate<={date_str})))))",
+            attributes=["cn"],
+        )
+    except Exception as e:
+        log.exception(f"Failed to search for users \n Exception: {e}")
+
+    found_users = [entry.entry_dn for entry in ldap_connection_lock.entries]
+    log.debug(found_users)
+    for user in found_users:
+        try:
+            ldap_connection_lock.modify(
+                user,
+                {
+                    "pwdAccountLockedTime": [
+                        (
+                            MODIFY_REPLACE,
+                            ["000001010000Z"],
+                        )
+                    ]
+                },
+            )
+            log.info(f"Locked user {user}")
+        except Exception as e:
+            log.exception(f"Failed to unlock user {user} \n Exception: {e}")
+
+    ldap_connection_unlock = ldap_connect(
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
+    )
+
+    try:
+        ldap_connection_unlock.search(
+            ",".join([user_ou, root_dn]),
+            f"(&(pwdAccountLockedTime=000001010000Z)(|(!(endDate=*))(endDate>={date_str}))(|(!(startDate=*))(startDate<={date_str})))",
+            attributes=["cn"],
+        )
+    except Exception as e:
+        log.exception(f"Failed to search for users \n Exception: {e}")
+
+    found_users = [entry.entry_dn for entry in ldap_connection_unlock.entries]
+    log.debug(found_users)
+    for user in found_users:
+        try:
+            ldap_connection_unlock.modify(
+                user,
+                {
+                    "pwdAccountLockedTime": [
+                        (
+                            MODIFY_DELETE,
+                            ["000001010000Z"],
+                        )
+                    ]
+                },
+            )
+            log.info(f"Unlocked user {user}")
+        except Exception as e:
+            log.exception(f"Failed to unlock user {user} \n Exception: {e}")
+
+
+def remove_all_user_passwords(user_ou, root_dn):
+    log.info("Removing all user passwords")
+
+    ldap_connection = ldap_connect(
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
+    )
+
+    user_filter = "(!(cn=AutomatedTestUser))"
+
+    try:
+        ldap_connection.search(
+            ",".join([user_ou, root_dn]),
+            user_filter,
+            attributes=["cn"],
+            search_scope="LEVEL",
+        )
+    except Exception as e:
+        log.exception("Failed to search for users")
+        raise e
+
+    found_users = [entry.entry_dn for entry in ldap_connection.entries]
+    log.debug("Users found:")
+    log.debug(found_users)
+
+    for user in found_users:
+        try:
+            ldap_connection.modify(
+                user,
+                {
+                    "userPassword": [
+                        (
+                            MODIFY_DELETE,
+                            [],
+                        )
+                    ]
+                },
+            )
+            log.info(f"Successfully removed passwd for user {user}, or it didn't have one to begin with")
+        except Exception as e:
+            log.exception(f"Failed to remove passwd for user {user}")
+            raise e
+    ldap_connection.unbind()

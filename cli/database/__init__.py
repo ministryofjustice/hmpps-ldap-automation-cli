@@ -13,7 +13,5 @@ def connection():
         log.debug("Created database connection successfully")
         return conn
     except Exception as e:
-        log.exception(
-            f"Failed to create database connection. An exception of type {type(e).__name__} occurred: {e}"
-        )
+        log.exception(f"Failed to create database connection. An exception of type {type(e).__name__} occurred: {e}")
         raise e
