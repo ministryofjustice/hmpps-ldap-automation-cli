@@ -34,7 +34,7 @@ def add_roles_to_users(
     root_dn,
     user_role_list,
 ):
-    cli.ldap.user.process_user_roles_list(
+    cli.ldap_cmds.user.process_user_roles_list(
         user_role_list,
         user_ou,
         root_dn,
@@ -73,7 +73,7 @@ def update_user_home_areas(
     user_ou,
     root_dn,
 ):
-    cli.ldap.user.change_home_areas(
+    cli.ldap_cmds.user.change_home_areas(
         old_home_area,
         new_home_area,
         user_ou,
@@ -143,7 +143,7 @@ def update_user_roles(
     user_filter,
     role_filter,
 ):
-    cli.ldap.user.update_roles(
+    cli.ldap_cmds.user.update_roles(
         roles,
         user_ou,
         root_dn,
