@@ -150,9 +150,7 @@ def process_user_roles_list(user_role_list, user_ou="ou=Users", root_dn="dc=moj,
 #########################################
 
 
-def update_roles(
-    roles, user_ou, root_dn, add, remove, update_notes, user_note, user_filter="(userSector=*)", role_filter="*"
-):
+def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, user_filter, roles_to_filter):
     if update_notes and (user_note is None or len(user_note) < 1):
         log.error("User note must be provided when updating notes")
         raise Exception("User note must be provided when updating notes")
@@ -168,6 +166,9 @@ def update_roles(
         raise e
 
     # # Search for users matching the user_filter
+
+    user_filter = f"(&(objectclass=NDUser){user_filter})"
+    log.debug(f"User filter: {user_filter}")
     try:
         ldap_connection_user_filter.search(
             ",".join([user_ou, root_dn]),
@@ -184,16 +185,17 @@ def update_roles(
     log.info(f"Found {len(users_found)} users matching the user filter")
     ldap_connection_user_filter.unbind()
 
-    roles_filter_list = role_filter.split(",")
     roles = roles.split(",")
 
     # create role filter
-    if len(roles_filter_list) > 0:
+    if len(roles_to_filter) > 0:
         full_role_filter = (
-            f"(&(objectclass=NDRoleAssociation)(|{''.join(['(cn=' + role + ')' for role in roles_filter_list])}))"
+            f"(&(objectclass=NDRoleAssociation)(|{''.join(['(cn=' + role + ')' for role in roles_to_filter])}))"
         )
     else:
         full_role_filter = "(&(objectclass=NDRoleAssociation)(cn=*))"
+
+    log.debug(full_role_filter)
 
     # Search for roles matching the role_filter
 
@@ -217,7 +219,6 @@ def update_roles(
     except Exception as e:
         log.exception("Failed to search for roles")
         raise e
-
     roles_found = sorted(
         set({entry.entry_dn.split(",")[1].split("=")[1] for entry in ldap_connection_role_filter.entries})
     )
@@ -228,14 +229,19 @@ def update_roles(
     ldap_connection_role_filter.unbind()
 
     # generate a list of matches in roles and users
-    matched_users = set(users_found) & set(roles_found)
+    users_found_set = set(users_found)
+    roles_found_set = set(roles_found)
+
+    log.debug(users_found_set)
+    log.debug(roles_found_set)
+
+    matched_users = sorted(users_found_set.intersection(roles_found_set))
     log.debug("matched users: ")
     log.debug(matched_users)
 
     # cartesian_product = [(user, role) for user in matched_users for role in roles]
-
     cartesian_product = list(product(matched_users, roles))
-    log.info(f"Found {len(cartesian_product)} combinations of users and roles")
+    log.info(f"Created {len(cartesian_product)} combinations of users and roles")
     log.debug("cartesian product: ")
     log.debug(cartesian_product)
 
@@ -249,8 +255,8 @@ def update_roles(
         log.exception("Failed to connect to LDAP")
         raise e
 
-    removed = 0
-    not_removed = 0
+    actioned = 0
+    not_actioned = 0
     failed = 0
     for item in cartesian_product:
         if add:
@@ -268,8 +274,10 @@ def update_roles(
                 raise e
             if ldap_connection_action.result["result"] == 0:
                 log.info(f"Successfully added role '{item[1]}' to user '{item[0]}'")
+                actioned = actioned + 1
             elif ldap_connection_action.result["result"] == 68:
                 log.info(f"Role '{item[1]}' already present for user '{item[0]}'")
+                not_actioned = not_actioned + 1
             else:
                 log.e(f"Failed to add role '{item[1]}' to user '{item[0]}'")
                 log.debug(ldap_connection_action.result)
@@ -280,17 +288,17 @@ def update_roles(
             ldap_connection_action.delete(f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}")
             if ldap_connection_action.result["result"] == 0:
                 log.info(f"Successfully removed role '{item[1]}' from user '{item[0]}'")
-                removed = removed + 1
+                actioned = actioned + 1
             elif ldap_connection_action.result["result"] == 32:
                 log.info(f"Role '{item[1]}' already absent for user '{item[0]}'")
-                not_removed = not_removed + 1
+                not_actioned = not_actioned + 1
             else:
                 log.error(f"Failed to remove role '{item[1]}' from user '{item[0]}'")
                 log.debug(ldap_connection_action.result)
                 failed = failed + 1
         else:
             log.error("No action specified")
-            
+
     log.info("\n==========================\n\tSUMMARY\n==========================")
     log.info("User/role searches:")
     log.info(f"    - Found {len(roles_found)} users with roles matching the role filter")
@@ -300,8 +308,8 @@ def update_roles(
     log.info(f"    - Found {len(matched_users)} users with roles matching the role filter and user filter")
 
     log.info("Actions:")
-    log.info(f"    - Successfully removed {removed} roles")
-    log.info(f"    - Roles already absent for {not_removed} users")
+    log.info(f"    - Successfully actioned {actioned} roles")
+    log.info(f"    - Roles already in desired state for {not_actioned} users")
     log.info(f"    - Failed to remove {failed} roles due to errors")
 
     if update_notes:
