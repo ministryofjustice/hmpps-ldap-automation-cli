@@ -49,7 +49,7 @@ def change_home_areas(
     search_filter = (
         f"(&(objectclass={object_class})(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))"
     )
-    ldap_connection.search_s(
+    ldap_connection.search(
         ",".join(
             [
                 user_ou,
@@ -169,7 +169,7 @@ def update_roles(
 
     # # Search for users matching the user_filter
     try:
-        ldap_connection_user_filter.search_s(
+        ldap_connection_user_filter.search(
             ",".join([user_ou, root_dn]),
             user_filter,
             attributes=["cn"],
@@ -208,7 +208,7 @@ def update_roles(
         raise e
 
     try:
-        ldap_connection_role_filter.search_s(
+        ldap_connection_role_filter.search(
             ",".join([user_ou, root_dn]),
             full_role_filter,
             attributes=["cn"],
@@ -399,7 +399,7 @@ def deactivate_crc_users(user_ou, root_dn):
 
     found_users = []
     for home_area in home_areas:
-        ldap_connection.search_s(
+        ldap_connection.search(
             ",".join(
                 [
                     user_ou,
@@ -412,7 +412,7 @@ def deactivate_crc_users(user_ou, root_dn):
 
         found_users.append(entry.entry_dn for entry in ldap_connection.entries)
 
-    ldap_connection.search_s(
+    ldap_connection.search(
         ",".join([user_ou, root_dn]),
         f"(&(!(userHomeArea=*)){user_filter})",
         attributes=["dn"],
@@ -466,7 +466,7 @@ def user_expiry(user_ou, root_dn):
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
     try:
-        ldap_connection_lock.search_s(
+        ldap_connection_lock.search(
             ",".join(
                 [
                     user_ou,
@@ -505,7 +505,7 @@ def user_expiry(user_ou, root_dn):
     )
 
     try:
-        ldap_connection_unlock.search_s(
+        ldap_connection_unlock.search(
             ",".join([user_ou, root_dn]),
             f"(&(pwdAccountLockedTime=000001010000Z)(|(!(endDate=*))(endDate>={date_str}))(|(!(startDate=*))(startDate<={date_str})))",
             attributes=["cn"],
@@ -545,7 +545,7 @@ def remove_all_user_passwords(user_ou, root_dn):
     user_filter = "(!(cn=AutomatedTestUser))"
 
     try:
-        ldap_connection.search_s(
+        ldap_connection.search(
             ",".join([user_ou, root_dn]),
             user_filter,
             attributes=["cn"],
