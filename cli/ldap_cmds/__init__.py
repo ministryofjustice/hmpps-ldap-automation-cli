@@ -20,6 +20,7 @@ def ldap_connect(
         authentication="SIMPLE",
     )
 
+
 # def db_connect(db_user, db_password, db_host, db_port, db_service_name):
 #     return oracledb.connect(db_user, db_password, db_host, db_port, db_service_name)
 
