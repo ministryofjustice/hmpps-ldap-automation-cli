@@ -290,7 +290,7 @@ def update_roles(
                 failed = failed + 1
         else:
             log.error("No action specified")
-            
+
     log.info("\n==========================\n\tSUMMARY\n==========================")
     log.info("User/role searches:")
     log.info(f"    - Found {len(roles_found)} users with roles matching the role filter")
