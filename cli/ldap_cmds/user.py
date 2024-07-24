@@ -49,7 +49,7 @@ def change_home_areas(
     search_filter = (
         f"(&(objectclass={object_class})(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))"
     )
-    ldap_connection.search(
+    ldap_connection.search_s(
         ",".join(
             [
                 user_ou,
@@ -169,7 +169,7 @@ def update_roles(
 
     # # Search for users matching the user_filter
     try:
-        ldap_connection_user_filter.search(
+        ldap_connection_user_filter.search_s(
             ",".join([user_ou, root_dn]),
             user_filter,
             attributes=["cn"],
@@ -208,7 +208,7 @@ def update_roles(
         raise e
 
     try:
-        ldap_connection_role_filter.search(
+        ldap_connection_role_filter.search_s(
             ",".join([user_ou, root_dn]),
             full_role_filter,
             attributes=["cn"],
@@ -223,6 +223,7 @@ def update_roles(
     )
     log.debug("users found from roles filter: ")
     log.debug(roles_found)
+    log.info(f"Found {len(roles_found)} users with roles matching the role filter")
 
     ldap_connection_role_filter.unbind()
 
@@ -273,6 +274,9 @@ def update_roles(
                 log.e(f"Failed to add role '{item[1]}' to user '{item[0]}'")
                 log.debug(ldap_connection_action.result)
         elif remove:
+            removed = 0
+            not_removed = 0
+            failed = 0
             ldap_connection_action.delete(f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}")
             if ldap_connection_action.result["result"] == 0:
                 log.info(f"Successfully removed role '{item[1]}' from user '{item[0]}'")
@@ -286,7 +290,7 @@ def update_roles(
                 failed = failed + 1
         else:
             log.error("No action specified")
-
+            
     log.info("\n==========================\n\tSUMMARY\n==========================")
     log.info("User/role searches:")
     log.info(f"    - Found {len(roles_found)} users with roles matching the role filter")
@@ -395,7 +399,7 @@ def deactivate_crc_users(user_ou, root_dn):
 
     found_users = []
     for home_area in home_areas:
-        ldap_connection.search(
+        ldap_connection.search_s(
             ",".join(
                 [
                     user_ou,
@@ -408,7 +412,7 @@ def deactivate_crc_users(user_ou, root_dn):
 
         found_users.append(entry.entry_dn for entry in ldap_connection.entries)
 
-    ldap_connection.search(
+    ldap_connection.search_s(
         ",".join([user_ou, root_dn]),
         f"(&(!(userHomeArea=*)){user_filter})",
         attributes=["dn"],
@@ -462,7 +466,7 @@ def user_expiry(user_ou, root_dn):
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
     try:
-        ldap_connection_lock.search(
+        ldap_connection_lock.search_s(
             ",".join(
                 [
                     user_ou,
@@ -501,7 +505,7 @@ def user_expiry(user_ou, root_dn):
     )
 
     try:
-        ldap_connection_unlock.search(
+        ldap_connection_unlock.search_s(
             ",".join([user_ou, root_dn]),
             f"(&(pwdAccountLockedTime=000001010000Z)(|(!(endDate=*))(endDate>={date_str}))(|(!(startDate=*))(startDate<={date_str})))",
             attributes=["cn"],
@@ -541,7 +545,7 @@ def remove_all_user_passwords(user_ou, root_dn):
     user_filter = "(!(cn=AutomatedTestUser))"
 
     try:
-        ldap_connection.search(
+        ldap_connection.search_s(
             ",".join([user_ou, root_dn]),
             user_filter,
             attributes=["cn"],
