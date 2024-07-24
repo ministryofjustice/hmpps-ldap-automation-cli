@@ -271,9 +271,9 @@ def update_roles(
                 log.e(f"Failed to add role '{item[1]}' to user '{item[0]}'")
                 log.debug(ldap_connection_action.result)
         elif remove:
-            removed=0
-            not_removed=0
-            failed=0
+            removed = 0
+            not_removed = 0
+            failed = 0
             ldap_connection_action.delete(f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}")
             if ldap_connection_action.result["result"] == 0:
                 log.info(f"Successfully removed role '{item[1]}' from user '{item[0]}'")
@@ -300,7 +300,6 @@ def update_roles(
         log.info(f"Successfully removed {removed} roles")
         log.info(f"Roles already absent for {not_removed} users")
         log.info(f"Failed to remove {failed} roles due to errors")
-
 
     if update_notes:
         connection = cli.database.connection()
