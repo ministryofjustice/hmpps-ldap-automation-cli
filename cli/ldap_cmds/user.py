@@ -249,6 +249,9 @@ def update_roles(
         log.exception("Failed to connect to LDAP")
         raise e
 
+    removed = 0
+    not_removed = 0
+    failed = 0
     for item in cartesian_product:
         if add:
             try:
@@ -287,19 +290,19 @@ def update_roles(
                 failed = failed + 1
         else:
             log.error("No action specified")
+            
+    log.info("\n==========================\n\tSUMMARY\n==========================")
+    log.info("User/role searches:")
+    log.info(f"    - Found {len(roles_found)} users with roles matching the role filter")
+    log.info(f"    - Found {len(users_found)} users matching the user filter")
 
-        log.info("SUMMARY")
-        log.info("User/role searches:")
-        log.info(f"Found {len(roles_found)} users with roles matching the role filter")
-        log.info(f"Found {len(users_found)} users matching the user filter")
+    log.info("This produces the following matches:")
+    log.info(f"    - Found {len(matched_users)} users with roles matching the role filter and user filter")
 
-        log.info("This produces the following matches:")
-        log.info(f"Found {len(matched_users)} users with roles matching the role filter and user filter")
-
-        log.info("Actions:")
-        log.info(f"Successfully removed {removed} roles")
-        log.info(f"Roles already absent for {not_removed} users")
-        log.info(f"Failed to remove {failed} roles due to errors")
+    log.info("Actions:")
+    log.info(f"    - Successfully removed {removed} roles")
+    log.info(f"    - Roles already absent for {not_removed} users")
+    log.info(f"    - Failed to remove {failed} roles due to errors")
 
     if update_notes:
         connection = cli.database.connection()
