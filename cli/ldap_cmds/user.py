@@ -10,6 +10,8 @@ from cli import (
 )
 
 import ldap
+from ldap.controls import SimplePagedResultsControl
+import ldap.modlist as modlist
 
 from cli.ldap_cmds import (
     ldap_connect,
@@ -187,7 +189,7 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
 
     roles = roles.split(",")
 
-    # create role filter
+    # Create role filter
     if len(roles_to_filter) > 0:
         full_role_filter = f"(&(objectclass=NDRoleAssociation)(|{''.join(['(cn=' + role + ')' for role in roles_to_filter.split(',')])}))"
     else:
@@ -195,29 +197,61 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
 
     log.debug(full_role_filter)
 
-    # Search for roles matching the role_filter
-
     try:
         ldap_connection_role_filter = ldap.initialize("ldap://" + env.vars.get("LDAP_HOST"))
         ldap_connection_role_filter.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
-    except Exception as e:
+        ldap_connection_role_filter.set_option(ldap.OPT_REFERRALS, 0)
+    except ldap.LDAPError as e:
         log.exception("Failed to connect to LDAP")
         raise e
 
+    roles_search_result = []
+    pages = 0
+    page_control = SimplePagedResultsControl(True, size=100, cookie="")
+
     try:
-        role_filter_results = ldap_connection_role_filter.search_ext_s(
-            ",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, full_role_filter, ["cn"], sizelimit=0
+        # Perform the paged search
+        response = ldap_connection_role_filter.search_ext(
+            ",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, full_role_filter, ["cn"], serverctrls=[page_control]
         )
-    except Exception as e:
+
+        # test example to get more than one page
+        # response = ldap_connection_role_filter.search_ext(",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, "(cn=*)", ["cn"], serverctrls=[page_control])
+
+        while True:
+            pages += 1
+            log.debug(f"Processing page {pages}")
+            try:
+                rtype, rdata, rmsgid, serverctrls = ldap_connection_role_filter.result3(response)
+                roles_search_result.extend(rdata)
+                cookie = serverctrls[0].cookie
+                print(cookie)
+                if cookie:
+                    page_control.cookie = cookie
+                    response = ldap_connection_role_filter.search_ext(
+                        ",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, full_role_filter, ["cn"], serverctrls=[page_control]
+                    )
+                    # response = ldap_connection_role_filter.search_ext(
+                    #     ",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, "(cn=*)", ["cn"], serverctrls=[page_control])
+                else:
+                    break
+            except ldap.LDAPError as e:
+                log.exception("Error retrieving LDAP results")
+                raise e
+
+    except ldap.LDAPError as e:
         log.exception("Failed to search for roles")
         raise e
 
-    roles_found = sorted(set({dn.split(",")[1].split("=")[1] for dn, entry in role_filter_results}))
-    log.debug("users found from roles filter: ")
+    finally:
+        ldap_connection_role_filter.unbind_s()
+
+    roles_found = sorted(set({dn.split(",")[1].split("=")[1] for dn, entry in roles_search_result}))
+
+    roles_found = sorted(roles_found)
+    log.debug("Users found from roles filter: ")
     log.debug(roles_found)
     log.info(f"Found {len(roles_found)} users with roles matching the role filter")
-
-    ldap_connection_role_filter.unbind()
 
     # generate a list of matches in roles and users
     users_found_set = set(users_found)
