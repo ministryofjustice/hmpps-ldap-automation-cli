@@ -214,7 +214,7 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
             ",".join([user_ou, root_dn]),
             full_role_filter,
             attributes=["cn"],
-            dereference_aliases=DEREF_NEVER,
+            dereference_aliases=DEREF_ALWAYS,
         )
     except Exception as e:
         log.exception("Failed to search for roles")
