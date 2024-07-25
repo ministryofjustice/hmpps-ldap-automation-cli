@@ -118,31 +118,9 @@ def update_user_home_areas(
     help="Remove role from users",
     is_flag=True,
 )
-@click.option(
-    "-rf",
-    "--role-filter",
-    help='Comma separated string to generate roles filter from eg "role1,role2,role3"',
-    required=False,
-    default="*",
-)
-@click.option(
-    "-uf",
-    "--user-filter",
-    help="Filter to find users",
-    required=False,
-    default="(userSector=*)",
-)
-def update_user_roles(
-    roles,
-    user_ou,
-    root_dn,
-    add,
-    remove,
-    update_notes,
-    user_note,
-    user_filter,
-    role_filter,
-):
+@click.option("-uf", "--user-filter", help="Filter to find users", required=False, default="(objectclass=*)")
+@click.option("--roles-to-filter", help="Roles to filter", required=False, default="*")
+def update_user_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, user_filter, roles_to_filter):
     cli.ldap_cmds.user.update_roles(
         roles,
         user_ou,
@@ -152,7 +130,7 @@ def update_user_roles(
         update_notes,
         user_note=user_note,
         user_filter=user_filter,
-        role_filter=role_filter,
+        roles_to_filter=roles_to_filter,
     )
 
 
