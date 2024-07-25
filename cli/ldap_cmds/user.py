@@ -189,9 +189,7 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
 
     # create role filter
     if len(roles_to_filter) > 0:
-        full_role_filter = (
-            f"(&(objectclass=NDRoleAssociation)(|{''.join(['(cn=' + role + ')' for role in roles_to_filter.split(',')])}))"
-        )
+        full_role_filter = f"(&(objectclass=NDRoleAssociation)(|{''.join(['(cn=' + role + ')' for role in roles_to_filter.split(',')])}))"
     else:
         full_role_filter = "(&(objectclass=NDRoleAssociation)(cn=*))"
 
