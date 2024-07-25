@@ -207,16 +207,21 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
 
     roles_search_result = []
     pages = 0
-    page_control = SimplePagedResultsControl(True, size=100, cookie="")
+    if env.vars.get("LDAP_PAGE_SIZE") is None:
+        ldap_page_size = 100
+    else:
+        try:
+            ldap_page_size = int(env.vars.get("LDAP_PAGE_SIZE"))
+        except ValueError:
+            log.error("LDAP_PAGE_SIZE must be an integer")
+            raise ValueError("LDAP_PAGE_SIZE must be an integer")
+    
+    page_control = SimplePagedResultsControl(True, size=ldap_page_size, cookie="")
 
     try:
-        # Perform the paged search
         response = ldap_connection_role_filter.search_ext(
             ",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, full_role_filter, ["cn"], serverctrls=[page_control]
         )
-
-        # test example to get more than one page
-        # response = ldap_connection_role_filter.search_ext(",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, "(cn=*)", ["cn"], serverctrls=[page_control])
 
         while True:
             pages += 1
@@ -231,8 +236,6 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
                     response = ldap_connection_role_filter.search_ext(
                         ",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, full_role_filter, ["cn"], serverctrls=[page_control]
                     )
-                    # response = ldap_connection_role_filter.search_ext(
-                    #     ",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, "(cn=*)", ["cn"], serverctrls=[page_control])
                 else:
                     break
             except ldap.LDAPError as e:
