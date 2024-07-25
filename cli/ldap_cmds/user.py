@@ -9,13 +9,15 @@ from cli import (
     env,
 )
 
+import ldap
+
 from cli.ldap_cmds import (
     ldap_connect,
 )
 from ldap3 import (
     MODIFY_REPLACE,
     MODIFY_DELETE,
-    DEREF_NEVER,
+    DEREF_ALWAYS,
 )
 
 import cli.database
@@ -156,11 +158,8 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
         raise Exception("User note must be provided when updating notes")
 
     try:
-        ldap_connection_user_filter = ldap_connect(
-            env.vars.get("LDAP_HOST"),
-            env.vars.get("LDAP_USER"),
-            env.secrets.get("LDAP_BIND_PASSWORD"),
-        )
+        ldap_connection_user_filter = ldap.initialize("ldap://" + env.vars.get("LDAP_HOST"))
+        ldap_connection_user_filter.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
     except Exception as e:
         log.exception("Failed to connect to LDAP")
         raise e
@@ -170,16 +169,17 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
     user_filter = f"(&(objectclass=NDUser){user_filter})"
     log.debug(f"User filter: {user_filter}")
     try:
-        ldap_connection_user_filter.search(
+        user_filter_results = ldap_connection_user_filter.search_s(
             ",".join([user_ou, root_dn]),
+            ldap.SCOPE_SUBTREE,
             user_filter,
-            attributes=["cn"],
+            ["cn"],
         )
     except Exception as e:
         log.exception("Failed to search for users")
         raise e
 
-    users_found = sorted([entry.cn.value for entry in ldap_connection_user_filter.entries if entry.cn.value])
+    users_found = sorted(set([entry[1]["cn"][0].decode("utf-8") for entry in user_filter_results]))
     log.debug("users found from user filter")
     log.debug(users_found)
     log.info(f"Found {len(users_found)} users matching the user filter")
@@ -200,28 +200,24 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
     # Search for roles matching the role_filter
 
     try:
-        ldap_connection_role_filter = ldap_connect(
-            env.vars.get("LDAP_HOST"),
-            env.vars.get("LDAP_USER"),
-            env.secrets.get("LDAP_BIND_PASSWORD"),
-        )
+        ldap_connection_role_filter = ldap.initialize("ldap://" + env.vars.get("LDAP_HOST"))
+        ldap_connection_role_filter.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
     except Exception as e:
         log.exception("Failed to connect to LDAP")
         raise e
 
     try:
-        ldap_connection_role_filter.search(
+        role_filter_results = ldap_connection_role_filter.search_s(
             ",".join([user_ou, root_dn]),
+            ldap.SCOPE_SUBTREE,
             full_role_filter,
-            attributes=["cn"],
-            dereference_aliases=DEREF_ALWAYS,
+            ["cn"],
         )
     except Exception as e:
         log.exception("Failed to search for roles")
         raise e
-    roles_found = sorted(
-        set({entry.entry_dn.split(",")[1].split("=")[1] for entry in ldap_connection_role_filter.entries})
-    )
+
+    roles_found = sorted(set({dn.split(",")[1].split("=")[1] for dn, entry in role_filter_results}))
     log.debug("users found from roles filter: ")
     log.debug(roles_found)
     log.info(f"Found {len(roles_found)} users with roles matching the role filter")
