@@ -215,7 +215,7 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
         except ValueError:
             log.error("LDAP_PAGE_SIZE must be an integer")
             raise ValueError("LDAP_PAGE_SIZE must be an integer")
-    
+
     page_control = SimplePagedResultsControl(True, size=ldap_page_size, cookie="")
 
     try:
@@ -234,7 +234,11 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
                 if cookie:
                     page_control.cookie = cookie
                     response = ldap_connection_role_filter.search_ext(
-                        ",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, full_role_filter, ["cn"], serverctrls=[page_control]
+                        ",".join([user_ou, root_dn]),
+                        ldap.SCOPE_SUBTREE,
+                        full_role_filter,
+                        ["cn"],
+                        serverctrls=[page_control],
                     )
                 else:
                     break
