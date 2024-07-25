@@ -205,11 +205,8 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
         raise e
 
     try:
-        role_filter_results = ldap_connection_role_filter.search_s(
-            ",".join([user_ou, root_dn]),
-            ldap.SCOPE_SUBTREE,
-            full_role_filter,
-            ["cn"],
+        role_filter_results = ldap_connection_role_filter.search_ext_s(
+            ",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, full_role_filter, ["cn"], sizelimit=0
         )
     except Exception as e:
         log.exception("Failed to search for roles")
