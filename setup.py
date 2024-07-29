@@ -14,7 +14,7 @@ all_reqs = standard_pkgs + formatted_git_pkgs
 
 setup(
     name="ldap-automation",
-    version="0.1",
+    version="0.2",
     packages=find_packages(),
     install_requires=all_reqs,
     entry_points="""
