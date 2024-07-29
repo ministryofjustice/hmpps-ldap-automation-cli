@@ -1,21 +1,60 @@
 # .github/release.yml
-
 changelog:
   exclude:
     labels:
       - ignore-for-release
     authors:
       - octocat
-      - hmpps-bot
   categories:
-    - title: Breaking Changes 🛠
+    - title: Exciting New Features and Enhancements ✨
       labels:
-        - Semver-Major
-        - breaking-change
-    - title: Exciting New Features 🎉
+        - ✨_gitmoji
+        - ⚡_gitmoji
+        - 🚀_gitmoji
+        - 🎉_gitmoji
+        - 🥚_gitmoji
+    - title: Security Fixes 🔒
       labels:
-        - Semver-Minor
-        - enhancement
+        - 🔒_gitmoji
+        - 🛡️_gitmoji
+        - 🛂_gitmoji
+        - 🔐_gitmoji
+    - title: Bug Fixes 🐛
+      labels:
+        - 🐛_gitmoji
+        - 🚑_gitmoji
+        - 🩹_gitmoji
+    - title: Documentation 📚
+      labels:
+        - 📚_gitmoji
+        - 📝_gitmoji
+        - 💡_gitmoji
+        - 📄_gitmoji
+    - title: Typo Corrections 📝
+      labels:
+        - 📝_gitmoji
+        - 📚_gitmoji
+    - title: Breaking Changes 💥
+      labels:
+        - 💥_gitmoji
+    - title: Refactor ♻️
+      labels:
+        - ♻️_gitmoji
+        - ⚰️_gitmoji
+        - 🗑️_gitmoji
+        - 🚚_gitmoji
+    - title: Work In Progress 🚧
+      labels:
+        - 🚧_gitmoji
+        - 🍺_gitmoji
+        - 💩_gitmoji
+    - title: Dependency Updates 📦
+      labels:
+        - ➕_gitmoji
+        - ➖_gitmoji
+        - 📌_gitmoji
+        - ⬆️_gitmoji
+        - ⬇️_gitmoji
     - title: Other Changes
       labels:
         - "*"
