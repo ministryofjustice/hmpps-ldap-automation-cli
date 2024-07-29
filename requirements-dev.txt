@@ -1,6 +1,6 @@
 click==8.1.7
 ldap3
-oracledb==1.4
+oracledb==2.3.0
 ansible-runner
 PyGithub
 GitPython
