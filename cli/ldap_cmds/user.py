@@ -107,7 +107,10 @@ def parse_user_role_list(
 def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
     log.info(f"Adding roles {roles} to user {username}")
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_PORT", 389), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
     )
     for role in roles:
         try:

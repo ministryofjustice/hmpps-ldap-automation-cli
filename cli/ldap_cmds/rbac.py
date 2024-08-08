@@ -133,7 +133,7 @@ def context_ldif(
 
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get("LDAP_HOST")}:{env.vars.get('LDAP_PORT')}")
+        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
         connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
@@ -171,7 +171,7 @@ def group_ldifs(
 ):
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get("LDAP_HOST")}:{env.vars.get('LDAP_PORT')}")
+        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
         connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
@@ -223,12 +223,11 @@ def policy_ldifs(
 ):
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get("LDAP_HOST")}:{env.vars.get('LDAP_PORT')}")
+        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
         connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
         raise e
-
 
     log.debug("*********************************")
     log.debug("STARTING POLICY LDIFS")
@@ -238,7 +237,7 @@ def policy_ldifs(
 
     # first, delete the policies
     ldap_config_dict = env.vars.get("LDAP_CONFIG") or ldap_config
-    policy_tree = "ou=Policies," + ldap_config_dict.get("base_root")
+    policy_tree = f"ou=Policies,{ldap_config_dict.get('base_root')}"
 
     log.debug(f"Policy tree: {policy_tree}")
 
@@ -268,7 +267,6 @@ def policy_ldifs(
                 log.debug("error deleting entry")
                 log.info("No such object found, 32")
                 log.debug(no_such_object_e)
-
 
     log.debug("*********************************")
     log.debug("RECREATING POLICY ENTRIES")
@@ -311,7 +309,7 @@ def role_ldifs(
 ):
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get("LDAP_HOST")}:{env.vars.get('LDAP_PORT')}")
+        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
         connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
@@ -390,6 +388,7 @@ def role_ldifs(
     log.debug("FINISHED ROLES")
     log.debug("*********************************")
 
+
 # not complete!!
 # see https://github.com/ministryofjustice/hmpps-delius-pipelines/blob/master/components/delius-core/playbooks/rbac/import_schemas.yml
 def schema_ldifs(
@@ -397,7 +396,7 @@ def schema_ldifs(
 ):
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get("LDAP_HOST")}:{env.vars.get('LDAP_PORT')}")
+        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
         connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
@@ -433,7 +432,7 @@ def user_ldifs(
 ):
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get("LDAP_HOST")}:{env.vars.get('LDAP_PORT')}")
+        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
         connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
