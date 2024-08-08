@@ -46,6 +46,7 @@ def change_home_areas(
     log.info(f"Updating user home areas from {old_home_area} to {new_home_area}")
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
         env.vars.get("LDAP_USER"),
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
@@ -106,7 +107,7 @@ def parse_user_role_list(
 def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
     log.info(f"Adding roles {roles} to user {username}")
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_PORT", 389), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
     )
     for role in roles:
         try:
@@ -280,6 +281,7 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
     try:
         ldap_connection_action = ldap_connect(
             env.vars.get("LDAP_HOST"),
+            env.vars.get("LDAP_PORT", 389),
             env.vars.get("LDAP_USER"),
             env.secrets.get("LDAP_BIND_PASSWORD"),
         )
@@ -405,6 +407,7 @@ def deactivate_crc_users(user_ou, root_dn):
     log.info("Deactivating CRC users")
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
         env.vars.get("LDAP_USER"),
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
@@ -502,6 +505,7 @@ def user_expiry(user_ou, root_dn):
 
     ldap_connection_lock = ldap_connect(
         env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
         env.vars.get("LDAP_USER"),
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
@@ -540,6 +544,7 @@ def user_expiry(user_ou, root_dn):
 
     ldap_connection_unlock = ldap_connect(
         env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
         env.vars.get("LDAP_USER"),
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
@@ -578,6 +583,7 @@ def remove_all_user_passwords(user_ou, root_dn):
 
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
         env.vars.get("LDAP_USER"),
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
