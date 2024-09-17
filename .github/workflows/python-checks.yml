@@ -1,0 +1,71 @@
+name: Ensure formatted code
+on:
+  pull_request:
+    types: [ opened, edited, reopened, synchronize, ready_for_review ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  
+jobs:
+  format_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ruff
+        run: pip install ruff
+      - name: Check formatting for Python code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          output=$(ruff format --check)
+          exit_code=$?
+          if [ $exit_code -eq 0 ]; then
+            echo "All Python code is properly formatted."
+            gh pr comment ${{ github.event.pull_request.number }} --body "All Python code is properly formatted."
+          else
+            echo "$output"
+            echo "<details><summary>:rotating_light: Python code is not properly formatted. Click to expand.</summary>" > output.txt
+            echo "" >> output.txt
+            echo '```' >> output.txt
+            echo "$output" >> output.txt
+            echo '```' >> output.txt
+            echo "" >> output.txt
+            echo '</details>' >> output.txt
+            echo "" >> output.txt
+            echo 'Please run `ruff format` to format the code.' >> output.txt
+            gh pr comment ${{ github.event.pull_request.number }} --body-file output.txt
+            exit 1
+          fi
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ruff
+        run: pip install ruff
+      - name: Lint Python code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          output=$(ruff check)
+          exit_code=$?
+          if [ $exit_code -eq 0 ]; then
+            echo "No linting errors found."
+            gh pr comment ${{ github.event.pull_request.number }} --body "No linting errors found in Python code."
+          else
+            echo "$output"
+            echo "<details><summary>:rotating_light: Linting errors found in Python code. Click to expand.</summary>" > output.txt
+            echo "" >> output.txt
+            echo '```' >> output.txt
+            echo "$output" >> output.txt
+            echo '```' >> output.txt
+            echo "" >> output.txt
+            echo '</details>' >> output.txt
+            echo "" >> output.txt
+            echo 'Tip: You can run `ruff check --fix` to fix automatically fixable errors.' >> output.txt
+            gh pr comment ${{ github.event.pull_request.number }} --body-file output.txt
+            exit 1
+          fi
