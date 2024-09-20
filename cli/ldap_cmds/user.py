@@ -162,7 +162,6 @@ def process_user_roles_list(
 #  Update user roles
 #########################################
 
-
 def update_roles(
     roles,
     user_ou,
