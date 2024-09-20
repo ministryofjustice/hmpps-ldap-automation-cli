@@ -133,8 +133,12 @@ def context_ldif(
 
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
-        connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
+        connection = ldap.initialize(
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+        )
+        connection.simple_bind_s(
+            env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        )
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
         raise e
@@ -171,8 +175,12 @@ def group_ldifs(
 ):
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
-        connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
+        connection = ldap.initialize(
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+        )
+        connection.simple_bind_s(
+            env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        )
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
         raise e
@@ -209,7 +217,10 @@ def group_ldifs(
             if attributes.get("description"):
                 log.info(f"Updating description for {dn}")
                 try:
-                    connection.modify(dn, [(ldap.MOD_REPLACE, "description", attributes["description"])])
+                    connection.modify(
+                        dn,
+                        [(ldap.MOD_REPLACE, "description", attributes["description"])],
+                    )
                 except ldap.ALREADY_EXISTS as already_exists_e:
                     log.info(f"{dn} already exists")
                     log.debug(already_exists_e)
@@ -223,8 +234,12 @@ def policy_ldifs(
 ):
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
-        connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
+        connection = ldap.initialize(
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+        )
+        connection.simple_bind_s(
+            env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        )
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
         raise e
@@ -260,7 +275,9 @@ def policy_ldifs(
         for entry in tree:
             try:
                 log.debug(entry[0])
-                connection.delete_ext_s(entry[0], serverctrls=[ldap.controls.simple.ManageDSAITControl()])
+                connection.delete_ext_s(
+                    entry[0], serverctrls=[ldap.controls.simple.ManageDSAITControl()]
+                )
                 print(f"Deleted {entry[0]}")
             except ldap.NO_SUCH_OBJECT as no_such_object_e:
                 log.debug(f"this is the entry {entry}")
@@ -309,8 +326,12 @@ def role_ldifs(
 ):
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
-        connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
+        connection = ldap.initialize(
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+        )
+        connection.simple_bind_s(
+            env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        )
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
         raise e
@@ -347,7 +368,10 @@ def role_ldifs(
             for entry in tree:
                 try:
                     log.debug(entry[0])
-                    connection.delete_ext_s(entry[0], serverctrls=[ldap.controls.simple.ManageDSAITControl()])
+                    connection.delete_ext_s(
+                        entry[0],
+                        serverctrls=[ldap.controls.simple.ManageDSAITControl()],
+                    )
                     print(f"Deleted {entry[0]}")
                 except ldap.NO_SUCH_OBJECT as no_such_object_e:
                     log.info("No such object found, 32")
@@ -396,13 +420,21 @@ def schema_ldifs(
 ):
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
-        connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
+        connection = ldap.initialize(
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+        )
+        connection.simple_bind_s(
+            env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        )
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
         raise e
 
-    schema_files = [file for file in rendered_files if "delius.ldif" or "pwm.ldif" in Path(file).name]
+    schema_files = [
+        file
+        for file in rendered_files
+        if "delius.ldif" or "pwm.ldif" in Path(file).name
+    ]
 
     # loop through the schema files
     for file in schema_files:
@@ -432,8 +464,12 @@ def user_ldifs(
 ):
     # connect to ldap
     try:
-        connection = ldap.initialize(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
-        connection.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
+        connection = ldap.initialize(
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+        )
+        connection.simple_bind_s(
+            env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        )
     except Exception as e:
         log.exception(f"Failed to connect to ldap")
         raise e
@@ -464,7 +500,10 @@ def user_ldifs(
                 for entry in tree:
                     try:
                         log.debug(entry[0])
-                        connection.delete_ext_s(entry[0], serverctrls=[ldap.controls.simple.ManageDSAITControl()])
+                        connection.delete_ext_s(
+                            entry[0],
+                            serverctrls=[ldap.controls.simple.ManageDSAITControl()],
+                        )
                         print(f"Deleted {entry[0]}")
                     except ldap.NO_SUCH_OBJECT as no_such_object_e:
                         log.info("No such object found, 32")
@@ -557,7 +596,9 @@ def main(
             f"{clone_path}/**/*",
             recursive=True,
         )
-        if Path(file).is_file() and Path(file).name.endswith(".ldif") or Path(file).name.endswith(".j2")
+        if Path(file).is_file()
+        and Path(file).name.endswith(".ldif")
+        or Path(file).name.endswith(".j2")
     ]
 
     prep_for_templating(files)
