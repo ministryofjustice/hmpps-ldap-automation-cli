@@ -29,11 +29,11 @@ jobs:
       - name: Create safe tag for image
         id: safe_tag
         run: |
-          if ${{ github.event_name }} == 'pull_request'; then
-            echo "SAFE_TAG=$(echo ${{ github.ref_name }} | sed 's/[^a-zA-Z0-9.]/-/g')-${{ github.run_id }}-${{ github.run_number }}" >> $GITHUB_OUTPUT
+          if "${{ github.event_name }}" == "pull_request"; then
+            echo "SAFE_TAG=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/[^a-zA-Z0-9.]/-/g')-${{ github.run_id }}-${{ github.run_number }}" >> $GITHUB_OUTPUT
           else
             echo "SAFE_TAG=$(echo ${{  github.ref_name }} | sed 's/[^a-zA-Z0-9.]/-/g')" >> $GITHUB_OUTPUT
-          fis
+          fi
 
       - name: Set up Docker Buildx
         id: setup_buildx
