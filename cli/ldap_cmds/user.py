@@ -46,13 +46,12 @@ def change_home_areas(
     log.info(f"Updating user home areas from {old_home_area} to {new_home_area}")
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
         env.vars.get("LDAP_USER"),
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
 
-    search_filter = (
-        f"(&(objectclass={object_class})(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))"
-    )
+    search_filter = f"(&(objectclass={object_class})(userHomeArea={old_home_area})(!(cn={old_home_area}))(!(endDate=*)))"
     ldap_connection.search(
         ",".join(
             [
@@ -84,7 +83,9 @@ def change_home_areas(
         if ldap_connection.result["result"] == 0:
             log.info(f"Successfully updated {attribute} for {dn}")
         else:
-            log.error(f"Failed to update {attribute} for {dn}: {ldap_connection.result}")
+            log.error(
+                f"Failed to update {attribute} for {dn}: {ldap_connection.result}"
+            )
 
 
 #########################################
@@ -100,13 +101,19 @@ def parse_user_role_list(
     # and the roles are separated by a semi-colon:
     # username1,role1;role2;role3|username2,role1;role2
 
-    return {user.split(",")[0]: user.split(",")[1].split(";") for user in user_role_list.split("|")}
+    return {
+        user.split(",")[0]: user.split(",")[1].split(";")
+        for user in user_role_list.split("|")
+    }
 
 
 def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
     log.info(f"Adding roles {roles} to user {username}")
     ldap_connection = ldap_connect(
-        env.vars.get("LDAP_HOST"), env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
+        env.vars.get("LDAP_USER"),
+        env.secrets.get("LDAP_BIND_PASSWORD"),
     )
     for role in roles:
         try:
@@ -131,7 +138,9 @@ def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=co
             raise Exception(f"Failed to add role {role} to user {username}")
 
 
-def process_user_roles_list(user_role_list, user_ou="ou=Users", root_dn="dc=moj,dc=com"):
+def process_user_roles_list(
+    user_role_list, user_ou="ou=Users", root_dn="dc=moj,dc=com"
+):
     user_roles = parse_user_role_list(user_role_list)
     try:
         for (
@@ -153,15 +162,28 @@ def process_user_roles_list(user_role_list, user_ou="ou=Users", root_dn="dc=moj,
 #  Update user roles
 #########################################
 
-
-def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, user_filter, roles_to_filter):
+def update_roles(
+    roles,
+    user_ou,
+    root_dn,
+    add,
+    remove,
+    update_notes,
+    user_note,
+    user_filter,
+    roles_to_filter,
+):
     if update_notes and (user_note is None or len(user_note) < 1):
         log.error("User note must be provided when updating notes")
         raise Exception("User note must be provided when updating notes")
 
     try:
-        ldap_connection_user_filter = ldap.initialize("ldap://" + env.vars.get("LDAP_HOST"))
-        ldap_connection_user_filter.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
+        ldap_connection_user_filter = ldap.initialize(
+            "ldap://" + env.vars.get("LDAP_HOST")
+        )
+        ldap_connection_user_filter.simple_bind_s(
+            env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        )
     except Exception as e:
         log.exception("Failed to connect to LDAP")
         raise e
@@ -181,7 +203,9 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
         log.exception("Failed to search for users")
         raise e
 
-    users_found = sorted(set([entry[1]["cn"][0].decode("utf-8") for entry in user_filter_results]))
+    users_found = sorted(
+        set([entry[1]["cn"][0].decode("utf-8") for entry in user_filter_results])
+    )
     log.debug("users found from user filter")
     log.debug(users_found)
     log.info(f"Found {len(users_found)} users matching the user filter")
@@ -198,8 +222,12 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
     log.debug(full_role_filter)
 
     try:
-        ldap_connection_role_filter = ldap.initialize("ldap://" + env.vars.get("LDAP_HOST"))
-        ldap_connection_role_filter.simple_bind_s(env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD"))
+        ldap_connection_role_filter = ldap.initialize(
+            "ldap://" + env.vars.get("LDAP_HOST")
+        )
+        ldap_connection_role_filter.simple_bind_s(
+            env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
+        )
         ldap_connection_role_filter.set_option(ldap.OPT_REFERRALS, 0)
     except ldap.LDAPError as e:
         log.exception("Failed to connect to LDAP")
@@ -220,14 +248,20 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
 
     try:
         response = ldap_connection_role_filter.search_ext(
-            ",".join([user_ou, root_dn]), ldap.SCOPE_SUBTREE, full_role_filter, ["cn"], serverctrls=[page_control]
+            ",".join([user_ou, root_dn]),
+            ldap.SCOPE_SUBTREE,
+            full_role_filter,
+            ["cn"],
+            serverctrls=[page_control],
         )
 
         while True:
             pages += 1
             log.debug(f"Processing page {pages}")
             try:
-                rtype, rdata, rmsgid, serverctrls = ldap_connection_role_filter.result3(response)
+                rtype, rdata, rmsgid, serverctrls = ldap_connection_role_filter.result3(
+                    response
+                )
                 roles_search_result.extend(rdata)
                 cookie = serverctrls[0].cookie
                 print(cookie)
@@ -253,7 +287,9 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
     finally:
         ldap_connection_role_filter.unbind_s()
 
-    roles_found = sorted(set({dn.split(",")[1].split("=")[1] for dn, entry in roles_search_result}))
+    roles_found = sorted(
+        set({dn.split(",")[1].split("=")[1] for dn, entry in roles_search_result})
+    )
 
     roles_found = sorted(roles_found)
     log.debug("Users found from roles filter: ")
@@ -280,6 +316,7 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
     try:
         ldap_connection_action = ldap_connect(
             env.vars.get("LDAP_HOST"),
+            env.vars.get("LDAP_PORT", 389),
             env.vars.get("LDAP_USER"),
             env.secrets.get("LDAP_BIND_PASSWORD"),
         )
@@ -317,7 +354,9 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
             removed = 0
             not_removed = 0
             failed = 0
-            ldap_connection_action.delete(f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}")
+            ldap_connection_action.delete(
+                f"cn={item[1]},cn={item[0]},{user_ou},{root_dn}"
+            )
             if ldap_connection_action.result["result"] == 0:
                 log.info(f"Successfully removed role '{item[1]}' from user '{item[0]}'")
                 actioned = actioned + 1
@@ -333,11 +372,15 @@ def update_roles(roles, user_ou, root_dn, add, remove, update_notes, user_note, 
 
     log.info("\n==========================\n\tSUMMARY\n==========================")
     log.info("User/role searches:")
-    log.info(f"    - Found {len(roles_found)} users with roles matching the role filter")
+    log.info(
+        f"    - Found {len(roles_found)} users with roles matching the role filter"
+    )
     log.info(f"    - Found {len(users_found)} users matching the user filter")
 
     log.info("This produces the following matches:")
-    log.info(f"    - Found {len(matched_users)} users with roles matching the role filter and user filter")
+    log.info(
+        f"    - Found {len(matched_users)} users with roles matching the role filter and user filter"
+    )
 
     log.info("Actions:")
     log.info(f"    - Successfully actioned {actioned} roles")
@@ -405,11 +448,14 @@ def deactivate_crc_users(user_ou, root_dn):
     log.info("Deactivating CRC users")
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
         env.vars.get("LDAP_USER"),
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
 
-    user_filter = "(userSector=private)(!(userSector=public))(!(endDate=*))(objectclass=NDUser)"
+    user_filter = (
+        "(userSector=private)(!(userSector=public))(!(endDate=*))(objectclass=NDUser)"
+    )
 
     home_areas = [
         [
@@ -479,9 +525,7 @@ def deactivate_crc_users(user_ou, root_dn):
     connection = cli.database.connection()
     for user_dn in all_users:
         try:
-            update_sql = (
-                f"UPDATE USER_ SET END_DATE=TRUNC(CURRENT_DATE) WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user_dn)"
-            )
+            update_sql = f"UPDATE USER_ SET END_DATE=TRUNC(CURRENT_DATE) WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user_dn)"
             update_cursor = connection.cursor()
             update_cursor.execute(
                 update_sql,
@@ -502,6 +546,7 @@ def user_expiry(user_ou, root_dn):
 
     ldap_connection_lock = ldap_connect(
         env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
         env.vars.get("LDAP_USER"),
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
@@ -540,6 +585,7 @@ def user_expiry(user_ou, root_dn):
 
     ldap_connection_unlock = ldap_connect(
         env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
         env.vars.get("LDAP_USER"),
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
@@ -578,6 +624,7 @@ def remove_all_user_passwords(user_ou, root_dn):
 
     ldap_connection = ldap_connect(
         env.vars.get("LDAP_HOST"),
+        env.vars.get("LDAP_PORT", 389),
         env.vars.get("LDAP_USER"),
         env.secrets.get("LDAP_BIND_PASSWORD"),
     )
@@ -612,7 +659,9 @@ def remove_all_user_passwords(user_ou, root_dn):
                     ]
                 },
             )
-            log.info(f"Successfully removed passwd for user {user}, or it didn't have one to begin with")
+            log.info(
+                f"Successfully removed passwd for user {user}, or it didn't have one to begin with"
+            )
         except Exception as e:
             log.exception(f"Failed to remove passwd for user {user}")
             raise e

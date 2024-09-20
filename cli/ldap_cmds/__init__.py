@@ -5,12 +5,8 @@ from ldap3 import (
 
 
 # import oracledb
-def ldap_connect(
-    ldap_host,
-    ldap_user,
-    ldap_password,
-):
-    server = Server(ldap_host)
+def ldap_connect(ldap_host, ldap_port, ldap_user, ldap_password):
+    server = Server(ldap_host, ldap_port)
 
     return Connection(
         server=server,
