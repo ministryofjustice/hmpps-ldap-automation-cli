@@ -6,7 +6,6 @@ on:
       - closed
     branches:
       - main
-      - dev
     paths-ignore:
       - "readme.md"
       - ".gitignore"
@@ -19,6 +18,7 @@ jobs:
   release:
     outputs:
       tag: ${{ steps.tag.outputs.new_tag }}
+      release_type: ${{ steps.release_type.outputs.PRERELEASE }}
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-22.04
     permissions:
@@ -62,7 +62,6 @@ jobs:
 
   trigger_build:
     needs: release
-    if: steps.release_type.outputs.PRERELEASE == 'false'
     uses: ./.github/workflows/image-build.yml
     with:
       tag: ${{ needs.release.outputs.tag }}
