@@ -5,12 +5,6 @@ on:
   push:
     tags:
       - 'v*'
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-     
 
 run-name: "Image Build for tag ${{ github.ref_name }}"
 
@@ -29,21 +23,7 @@ jobs:
       - name: Create safe tag for image
         id: safe_tag
         run: |
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "SAFE_TAG=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/[^a-zA-Z0-9.]/-/g')-${{ github.run_id }}-${{ github.run_number }}" >> $GITHUB_OUTPUT
-          else
-            echo "SAFE_TAG=$(echo ${{  github.ref_name }} | sed 's/[^a-zA-Z0-9.]/-/g')" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Output VERSION_REF
-        id: output_version_ref
-        run: |
-            if [ "${{ github.event_name }}" == "pull_request" ]; then
-              # if on a PR we need to get the current branch name
-              echo "VERSION_REF=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
-            else
-              echo "VERSION_REF=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-            fi
+          echo "SAFE_TAG=$(echo ${{  github.ref_name }} | sed 's/[^a-zA-Z0-9.]/-/g')" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         id: setup_buildx
@@ -65,12 +45,7 @@ jobs:
           push: true
           tags: ghcr.io/ministryofjustice/hmpps-ldap-automation:${{ steps.safe_tag.outputs.SAFE_TAG }}
           build-args: |
-            VERSION_REF=${{ steps.output_version_ref.outputs.VERSION_REF }}
-        
-      - name: Comment image tag on PR
-        if: github.event_name == 'pull_request'
-        run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body "Image built and pushed to ghcr.io/ministryofjustice/hmpps-ldap-automation:${{ steps.safe_tag.outputs.SAFE_TAG }}"
+            VERSION_REF=${{ steps.BumpVersionAndPushTag.outputs.new_tag }}
 
       - name: Slack failure notification
         if: ${{ failure() }}
