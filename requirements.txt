@@ -1,6 +1,6 @@
 click==8.1.7
 ldap3==2.9.1
-oracledb==1.4
+oracledb==2.4.1
 PyGithub
 GitPython==3.1.43
 pyjwt==2.9.0
@@ -8,4 +8,4 @@ python-dotenv==1.0.1
 Jinja2==3.1.4
 python-ldap
 requests==2.32.3
-setuptools==72.0.0
+setuptools==75.3.0
