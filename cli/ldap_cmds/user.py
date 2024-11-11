@@ -1,34 +1,28 @@
-import oracledb
-
-import cli.ldap_cmds
-
-from cli.logger import (
-    log,
+from datetime import (
+    datetime,
 )
-from cli import (
-    env,
-)
-
-import ldap
-from ldap.controls import SimplePagedResultsControl
-import ldap.modlist as modlist
-
-from cli.ldap_cmds import (
-    ldap_connect,
-)
-from ldap3 import (
-    MODIFY_REPLACE,
-    MODIFY_DELETE,
-    DEREF_ALWAYS,
-)
-
-import cli.database
 from itertools import (
     product,
 )
 
-from datetime import (
-    datetime,
+import ldap
+import oracledb
+from ldap.controls import SimplePagedResultsControl
+from ldap3 import (
+    MODIFY_DELETE,
+    MODIFY_REPLACE,
+)
+
+import cli.database
+import cli.ldap_cmds
+from cli import (
+    env,
+)
+from cli.ldap_cmds import (
+    ldap_connect,
+)
+from cli.logger import (
+    log,
 )
 
 
@@ -121,7 +115,7 @@ def add_roles_to_user(username, roles, user_ou="ou=Users", root_dn="dc=moj,dc=co
                 f"cn={role},cn={username},{user_ou},{root_dn}",
                 attributes={
                     "objectClass": ["NDRoleAssociation", "alias"],
-                    "aliasedObjectName": f"cn={role},cn={username},cn=ndRoleCatalogue,{user_ou},{root_dn}",
+                    "aliasedObjectName": f"cn={role},cn=ndRoleCatalogue,{user_ou},{root_dn}",
                 },
             )
         except Exception as e:
@@ -154,13 +148,14 @@ def process_user_roles_list(
                 root_dn,
             )
     except Exception as e:
-        log.exception(f"Failed to add role to user")
+        log.exception("Failed to add role to user")
         raise e
 
 
 #########################################
 #  Update user roles
 #########################################
+
 
 def update_roles(
     roles,
@@ -525,7 +520,7 @@ def deactivate_crc_users(user_ou, root_dn):
     connection = cli.database.connection()
     for user_dn in all_users:
         try:
-            update_sql = f"UPDATE USER_ SET END_DATE=TRUNC(CURRENT_DATE) WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user_dn)"
+            update_sql = "UPDATE USER_ SET END_DATE=TRUNC(CURRENT_DATE) WHERE UPPER(DISTINGUISHED_NAME)=UPPER(:user_dn)"
             update_cursor = connection.cursor()
             update_cursor.execute(
                 update_sql,

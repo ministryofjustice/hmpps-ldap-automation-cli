@@ -1,7 +1,7 @@
 import click
+
 import cli.ldap_cmds.rbac
 import cli.ldap_cmds.user
-
 from cli import (
     logger,
 )
@@ -118,7 +118,6 @@ def update_user_home_areas(
     help="Remove role from users",
     is_flag=True,
 )
-
 @click.option(
     "-uf",
     "--user-filter",
@@ -138,6 +137,17 @@ def update_user_roles(
     user_filter,
     roles_to_filter,
 ):
+    cli.ldap_cmds.user.update_roles(
+        roles,
+        user_ou,
+        root_dn,
+        add,
+        remove,
+        update_notes,
+        user_note=user_note,
+        user_filter=user_filter,
+        roles_to_filter=roles_to_filter,
+    )
 
 
 @click.command()
