@@ -2,9 +2,11 @@ name: "Image Build"
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - '*'
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
   pull_request:
     types:
       - opened
@@ -32,7 +34,7 @@ jobs:
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             echo "SAFE_TAG=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/[^a-zA-Z0-9.]/-/g')-${{ github.run_id }}-${{ github.run_number }}" >> $GITHUB_OUTPUT
           else
-            echo "SAFE_TAG=$(echo ${{  github.ref_name }} | sed 's/[^a-zA-Z0-9.]/-/g')" >> $GITHUB_OUTPUT
+            echo "SAFE_TAG=$(echo ${{  inputs.tag }} | sed 's/[^a-zA-Z0-9.]/-/g')" >> $GITHUB_OUTPUT
           fi
 
       - name: Output VERSION_REF
@@ -42,7 +44,7 @@ jobs:
               # if on a PR we need to get the current branch name
               echo "VERSION_REF=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
             else
-              echo "VERSION_REF=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+              echo "VERSION_REF=${{ inputs.tag }}" >> $GITHUB_OUTPUT
             fi
 
       - name: Set up Docker Buildx
