@@ -36,13 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
     git \
-    build-essential \
-    libffi-dev \
-    libldap2-dev \
-    ldap-utils \
-    python3-dev \
-    libssl-dev \
-    libsasl2-dev
+    ldap-utils
 
 COPY --from=builder /code /code
 ENV PATH="/code/.venv/bin:$PATH"
