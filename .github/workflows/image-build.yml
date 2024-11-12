@@ -2,6 +2,10 @@ name: "Image Build"
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        required: true
+        type: string
   workflow_call:
     inputs:
       tag:
