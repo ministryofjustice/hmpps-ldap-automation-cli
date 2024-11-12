@@ -18,6 +18,8 @@ run-name: "Image Build for tag ${{ github.ref_name }}"
 permissions:
   packages: write
   contents: write
+  pull-requests: write
+  issues: write
 
 jobs:
   build-and-push:
