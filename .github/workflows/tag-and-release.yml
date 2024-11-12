@@ -6,13 +6,6 @@ on:
       - closed
     branches:
       - main
-    paths-ignore:
-      - "readme.md"
-      - ".gitignore"
-      - ".gitattributes"
-      - ".vscode/**"
-      - ".idea/**"
-      - ".github/**"
 
 jobs:
   release:
