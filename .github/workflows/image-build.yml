@@ -12,7 +12,6 @@ on:
       - opened
       - synchronize
       - reopened
-     
 
 run-name: "Image Build for tag ${{ github.ref_name }}"
 
@@ -40,12 +39,12 @@ jobs:
       - name: Output VERSION_REF
         id: output_version_ref
         run: |
-            if [ "${{ github.event_name }}" == "pull_request" ]; then
-              # if on a PR we need to get the current branch name
-              echo "VERSION_REF=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
-            else
-              echo "VERSION_REF=${{ inputs.tag }}" >> $GITHUB_OUTPUT
-            fi
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # if on a PR we need to get the current branch name
+            echo "VERSION_REF=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION_REF=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up Docker Buildx
         id: setup_buildx
@@ -65,10 +64,12 @@ jobs:
           context: .
           platforms: linux/amd64, linux/arm64
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: ghcr.io/ministryofjustice/hmpps-ldap-automation:${{ steps.safe_tag.outputs.SAFE_TAG }}
           build-args: |
             VERSION_REF=${{ steps.output_version_ref.outputs.VERSION_REF }}
-        
+
       - name: Comment image tag on PR
         if: github.event_name == 'pull_request'
         run: |
