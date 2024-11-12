@@ -1,16 +1,27 @@
-[tool.black]
-# PEP-8 line length is not very practical
-line-length = 88
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.py_cache
-  | \venv
-)/
-'''
+[project]
+name = "hmpps-ldap-automation-cli"
+version = "1.0.1"
+description = "An Automation CLI for HMPPS Delius LDAP"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.1.7",
+    "gitpython>=3.1.43",
+    "jinja2>=3.1.4",
+    "ldap3>=2.9.1",
+    "oracledb>=2.5.0",
+    "pygithub>=2.5.0",
+    "pyjwt>=2.9.0",
+    "python-dotenv>=1.0.1",
+    "python-ldap>=3.4.4",
+    "requests>=2.32.3",
+    "setuptools>=75.4.0",
+]
 
-[tool.codespell]
-skip = './venv,./rbac,./rendered'
-count = ''
-quiet-level = 3
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project.scripts]
+ldap-automation = "cli:main_group"
