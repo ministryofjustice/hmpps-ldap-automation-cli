@@ -45,6 +45,7 @@ jobs:
             else
               echo "SAFE_TAG=$(echo ${{  inputs.tag }} | sed 's/[^a-zA-Z0-9.]/-/g')" >> $GITHUB_OUTPUT
             fi
+          fi
 
       - name: Set up Docker Buildx
         id: setup_buildx
