@@ -71,6 +71,8 @@ jobs:
             VERSION_REF=${{ steps.output_version_ref.outputs.VERSION_REF }}
 
       - name: Comment image tag on PR
+        env:
+          GH_TOKEN: ${{ github.token }}
         if: github.event_name == 'pull_request'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} --body "Image built and pushed to ghcr.io/ministryofjustice/hmpps-ldap-automation:${{ steps.safe_tag.outputs.SAFE_TAG }}"
