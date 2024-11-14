@@ -1,25 +1,22 @@
-from pprint import pprint
-
-import ldap
-import ldap3.utils.hashed
-import ldif
-import ldap.modlist as modlist
-
-from cli.ldap_cmds import (
-    ldap_connect,
-)
-from cli import (
-    env,
-)
-import cli.git as git
 import glob
-from cli.logger import (
-    log,
-)
 from pathlib import (
     Path,
 )
+from pprint import pprint
+
+import ldap
+import ldap.modlist as modlist
+import ldap3.utils.hashed
+import ldif
+
+import cli.git as git
 import cli.template
+from cli import (
+    env,
+)
+from cli.logger import (
+    log,
+)
 
 # example for token auth
 # def get_repo_with_token(repo_tag="master"):
@@ -133,6 +130,8 @@ def context_ldif(
 
     # connect to ldap
     try:
+        log.info("Connecting to ldap")
+        log.info(f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}")
         connection = ldap.initialize(
             f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
         )
@@ -140,7 +139,7 @@ def context_ldif(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     for file in context_file:
@@ -182,7 +181,7 @@ def group_ldifs(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     group_files = [file for file in rendered_files if "-groups" in Path(file).name]
@@ -219,7 +218,13 @@ def group_ldifs(
                 try:
                     connection.modify(
                         dn,
-                        [(ldap.MOD_REPLACE, "description", attributes["description"])],
+                        [
+                            (
+                                ldap.MOD_REPLACE,
+                                "description",
+                                attributes["description"],
+                            )
+                        ],
                     )
                 except ldap.ALREADY_EXISTS as already_exists_e:
                     log.info(f"{dn} already exists")
@@ -241,7 +246,7 @@ def policy_ldifs(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     log.debug("*********************************")
@@ -263,7 +268,7 @@ def policy_ldifs(
             "(objectClass=*)",
         )
         tree.reverse()
-    except ldap.NO_SUCH_OBJECT as no_such_object_e:
+    except ldap.NO_SUCH_OBJECT:
         log.debug("Entire policy ou does not exist, no need to delete child objects")
         tree = None
 
@@ -276,7 +281,8 @@ def policy_ldifs(
             try:
                 log.debug(entry[0])
                 connection.delete_ext_s(
-                    entry[0], serverctrls=[ldap.controls.simple.ManageDSAITControl()]
+                    entry[0],
+                    serverctrls=[ldap.controls.simple.ManageDSAITControl()],
                 )
                 print(f"Deleted {entry[0]}")
             except ldap.NO_SUCH_OBJECT as no_such_object_e:
@@ -333,7 +339,7 @@ def role_ldifs(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     log.debug("*********************************")
@@ -358,7 +364,7 @@ def role_ldifs(
                 "(objectClass=*)",
             )
             tree.reverse()
-        except ldap.NO_SUCH_OBJECT as no_such_object_e:
+        except ldap.NO_SUCH_OBJECT:
             log.debug("Entire role ou does not exist, no need to delete child objects")
             tree = None
         log.debug("*********************************")
@@ -427,7 +433,7 @@ def schema_ldifs(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     schema_files = [
@@ -471,11 +477,11 @@ def user_ldifs(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     user_files = [file for file in rendered_files if "-users.ldif" in Path(file).name]
