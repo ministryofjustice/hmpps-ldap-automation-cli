@@ -1,25 +1,22 @@
-from pprint import pprint
-
-import ldap
-import ldap3.utils.hashed
-import ldif
-import ldap.modlist as modlist
-
-from cli.ldap_cmds import (
-    ldap_connect,
-)
-from cli import (
-    env,
-)
-import cli.git as git
 import glob
-from cli.logger import (
-    log,
-)
 from pathlib import (
     Path,
 )
+from pprint import pprint
+
+import ldap
+import ldap.modlist as modlist
+import ldap3.utils.hashed
+import ldif
+
+import cli.git as git
 import cli.template
+from cli import (
+    env,
+)
+from cli.logger import (
+    log,
+)
 
 # example for token auth
 # def get_repo_with_token(repo_tag="master"):
@@ -129,18 +126,24 @@ def template_rbac(
 def context_ldif(
     rendered_files,
 ):
-    context_file = [file for file in rendered_files if "context" in Path(file).name]
+    context_file = [
+        file for file in rendered_files if "context" in Path(file).name
+    ]
 
     # connect to ldap
     try:
+        log.info("Connecting to ldap")
+        log.info(
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get("LDAP_PORT", "389")}"
+        )
         connection = ldap.initialize(
-            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get("LDAP_PORT", "389")}"
         )
         connection.simple_bind_s(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     for file in context_file:
@@ -176,16 +179,18 @@ def group_ldifs(
     # connect to ldap
     try:
         connection = ldap.initialize(
-            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get("LDAP_PORT", "389")}"
         )
         connection.simple_bind_s(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
-    group_files = [file for file in rendered_files if "-groups" in Path(file).name]
+    group_files = [
+        file for file in rendered_files if "-groups" in Path(file).name
+    ]
     # loop through the group files
     for file in group_files:
         # parse the ldif into dn and record
@@ -219,7 +224,13 @@ def group_ldifs(
                 try:
                     connection.modify(
                         dn,
-                        [(ldap.MOD_REPLACE, "description", attributes["description"])],
+                        [
+                            (
+                                ldap.MOD_REPLACE,
+                                "description",
+                                attributes["description"],
+                            )
+                        ],
                     )
                 except ldap.ALREADY_EXISTS as already_exists_e:
                     log.info(f"{dn} already exists")
@@ -235,20 +246,22 @@ def policy_ldifs(
     # connect to ldap
     try:
         connection = ldap.initialize(
-            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get("LDAP_PORT", "389")}"
         )
         connection.simple_bind_s(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     log.debug("*********************************")
     log.debug("STARTING POLICY LDIFS")
     log.debug("*********************************")
 
-    policy_files = [file for file in rendered_files if "policy" in Path(file).name]
+    policy_files = [
+        file for file in rendered_files if "policy" in Path(file).name
+    ]
 
     # first, delete the policies
     ldap_config_dict = env.vars.get("LDAP_CONFIG") or ldap_config
@@ -263,8 +276,10 @@ def policy_ldifs(
             "(objectClass=*)",
         )
         tree.reverse()
-    except ldap.NO_SUCH_OBJECT as no_such_object_e:
-        log.debug("Entire policy ou does not exist, no need to delete child objects")
+    except ldap.NO_SUCH_OBJECT:
+        log.debug(
+            "Entire policy ou does not exist, no need to delete child objects"
+        )
         tree = None
 
     log.debug("*********************************")
@@ -276,7 +291,8 @@ def policy_ldifs(
             try:
                 log.debug(entry[0])
                 connection.delete_ext_s(
-                    entry[0], serverctrls=[ldap.controls.simple.ManageDSAITControl()]
+                    entry[0],
+                    serverctrls=[ldap.controls.simple.ManageDSAITControl()],
                 )
                 print(f"Deleted {entry[0]}")
             except ldap.NO_SUCH_OBJECT as no_such_object_e:
@@ -327,20 +343,22 @@ def role_ldifs(
     # connect to ldap
     try:
         connection = ldap.initialize(
-            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get("LDAP_PORT", "389")}"
         )
         connection.simple_bind_s(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     log.debug("*********************************")
     log.debug("STARTING ROLES")
     log.debug("*********************************")
 
-    role_files = [file for file in rendered_files if "nd_role" in Path(file).name]
+    role_files = [
+        file for file in rendered_files if "nd_role" in Path(file).name
+    ]
 
     # first, delete the roles
     ldap_config_dict = env.vars.get("LDAP_CONFIG") or ldap_config
@@ -358,8 +376,10 @@ def role_ldifs(
                 "(objectClass=*)",
             )
             tree.reverse()
-        except ldap.NO_SUCH_OBJECT as no_such_object_e:
-            log.debug("Entire role ou does not exist, no need to delete child objects")
+        except ldap.NO_SUCH_OBJECT:
+            log.debug(
+                "Entire role ou does not exist, no need to delete child objects"
+            )
             tree = None
         log.debug("*********************************")
         log.debug("DELETING ROLES")
@@ -421,13 +441,13 @@ def schema_ldifs(
     # connect to ldap
     try:
         connection = ldap.initialize(
-            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get("LDAP_PORT", "389")}"
         )
         connection.simple_bind_s(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     schema_files = [
@@ -465,20 +485,22 @@ def user_ldifs(
     # connect to ldap
     try:
         connection = ldap.initialize(
-            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get('LDAP_PORT')}"
+            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get("LDAP_PORT", "389")}"
         )
         connection.simple_bind_s(
             env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
         )
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
     except Exception as e:
-        log.exception(f"Failed to connect to ldap")
+        log.exception("Failed to connect to ldap")
         raise e
 
-    user_files = [file for file in rendered_files if "-users.ldif" in Path(file).name]
+    user_files = [
+        file for file in rendered_files if "-users.ldif" in Path(file).name
+    ]
 
     # first, delete the users
     for file in user_files:
@@ -502,7 +524,9 @@ def user_ldifs(
                         log.debug(entry[0])
                         connection.delete_ext_s(
                             entry[0],
-                            serverctrls=[ldap.controls.simple.ManageDSAITControl()],
+                            serverctrls=[
+                                ldap.controls.simple.ManageDSAITControl()
+                            ],
                         )
                         print(f"Deleted {entry[0]}")
                     except ldap.NO_SUCH_OBJECT as no_such_object_e:
