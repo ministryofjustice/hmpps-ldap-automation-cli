@@ -1,4 +1,4 @@
-click==8.1.7
+click==8.1.8
 ldap3
 oracledb==1.4
 ansible-runner
