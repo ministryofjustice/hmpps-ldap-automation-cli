@@ -1,7 +1,7 @@
 import os
 
 from dotenv import (
-    dotenv_values,
+    dotenv_values, find_dotenv, load_dotenv
 )
 
 import ast
@@ -17,6 +17,16 @@ import ast
 # gh_app_id = os.getenv("GH_APP_ID")
 # gh_private_key = os.getenv("GH_PRIVATE_KEY")
 # gh_installation_id = os.getenv("GH_INSTALLATION_ID")
+
+print("========inside env.py========")
+
+# Find the .env file (searches up from the current directory)
+dotenv_path = find_dotenv()
+if dotenv_path:
+    print(f"dot env path is {dotenv_path}")
+    load_dotenv(dotenv_path)
+else:
+    raise FileNotFoundError("Could not find the .env file!")
 
 
 vars = {
@@ -78,3 +88,6 @@ secrets = {
         if key.startswith("SECRET_") or key.startswith("SSM_") and val is not None
     },
 }
+
+print(f"vars : {vars}")
+print(f"secrets : {secrets}")

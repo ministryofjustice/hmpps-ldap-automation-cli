@@ -1,3 +1,5 @@
+from dotenv import load_dotenv, find_dotenv
+import os
 import glob
 from pathlib import (
     Path,
@@ -96,13 +98,26 @@ def prep_for_templating(
             )
 
 
-def template_rbac(
-    files,
-):
+def template_rbac(files,):
+    print("inside templace_rbac function")
+    # Find the .env file (searches up from the current directory)
+    dotenv_path = find_dotenv()
+    if dotenv_path:
+        print(f"dot env path is {dotenv_path}")
+        load_dotenv(dotenv_path)
+    else:
+        raise FileNotFoundError("Could not find the .env file!")
+    
+    admin_password = env.secrets.get("LDAP_ADMIN_PASSWORD")
+    print(f"admin password is {admin_password}")
+
+    if not admin_password:
+        raise ValueError("LDAP_ADMIN_PASSWORD is not set in the environment.")
+    
     hashed_pwd_admin_user = ldap3.utils.hashed.hashed(
         ldap3.HASHED_SALTED_SHA,
-        env.secrets.get("LDAP_ADMIN_PASSWORD"),
-    )
+        admin_password,)
+    
     rendered_files = []
 
     for file in files:
@@ -613,6 +628,7 @@ def main(
     rbac_repo_tag,
     clone_path="./rbac",
 ):
+    print(f" the rbac epo tag used is {rbac_repo_tag}")
     get_repo(rbac_repo_tag)
     files = [
         file
@@ -629,7 +645,7 @@ def main(
     rendered_files = template_rbac(files)
     context_ldif(rendered_files)
     policy_ldifs(rendered_files)
-    # schema_ldifs(files) probably not needed, but need to check!
+    schema_ldifs(files) # probably not needed, but need to check!
     role_ldifs(rendered_files)
     group_ldifs(rendered_files)
     user_ldifs(rendered_files)
