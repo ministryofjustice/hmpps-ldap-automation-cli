@@ -448,50 +448,86 @@ def role_ldifs(
     log.debug("*********************************")
 
 
-# not complete!!
 # see https://github.com/ministryofjustice/hmpps-delius-pipelines/blob/master/components/delius-core/playbooks/rbac/import_schemas.yml
-def schema_ldifs(
-    rendered_files,
-):
+def schema_ldifs(rendered_files,):
     # connect to ldap
+    host = env.vars.get('LDAP_HOST')
+    port = env.vars.get("LDAP_PORT", "389")
+    ldap_user = env.vars.get("LDAP_USER")
+    ldap_password = env.secrets.get("LDAP_BIND_PASSWORD")
+
     try:
-        connection = ldap.initialize(
-            f"ldap://{env.vars.get('LDAP_HOST')}:{env.vars.get("LDAP_PORT", "389")}"
-        )
-        connection.simple_bind_s(
-            env.vars.get("LDAP_USER"), env.secrets.get("LDAP_BIND_PASSWORD")
-        )
+        connection = ldap.initialize(f"ldap://{host}:{port}")
+        connection.simple_bind_s("ldap_user", ldap_password)
+
     except Exception as e:
         log.exception("Failed to connect to ldap")
         raise e
 
-    schema_files = [
-        file
-        for file in rendered_files
-        if "delius.ldif" or "pwm.ldif" in Path(file).name
+    schema_files = [file for file in rendered_files 
+                    if Path(file).name in ["delius.ldif", "pwm.ldif"]
     ]
 
     # loop through the schema files
     for file in schema_files:
         # parse the ldif into dn and record
+        print(f"\nProcessing file.... {file}")
         records = ldif.LDIFRecordList(open(file, "rb"))
         records.parse()
+
+        if not dn or "," not in dn:
+            print(f"Invalid DN format: '{dn}', skipping...")
+            continue  # Skip invalid DNs
+        
         # loop through the records
-        for entry in records.all_records:
-            log.info(f"Got entry record: {dn}")
-            # add the record to ldap
+        for dn, attributes in records.all_records:
+            print(f"\nProcessing entry: {dn}")
+            # print("Attributes:", attributes)
+            
+            # If dn is cn=delius,cn=schema,cn=config, change it to an existing entry
+            if dn == "cn=delius,cn=schema,cn=config":
+                dn = "cn={5}delius,cn=schema,cn=config"
+            elif dn == "cn=pwm,cn=schema,cn=config":
+                dn == "cn={6}pwm,cn=schema,cn=config"
+
+            # convert attributes dictinary to correct ldap modlist format
+            ldap_modlist = modlist.addModlist(attributes)
+            
             try:
-                dn = entry[0]
-                attributes = entry[1]
-                print(f" {entry[0]}")
-                connection.add_s(dn, modlist.addModlist(attributes))
-                log.info(f"{dn} Added")
-            except ldap.ALREADY_EXISTS as already_exists_e:
-                log.info(f"{dn} already exists")
-                log.debug(already_exists_e)
+                # Check if DN already exists
+                search_result = connection.search_s(dn, ldap.SCOPE_BASE)
+
+                if search_result:
+                    # Modify existing entry
+                    print(f"Found an existing entry, Modifying entry: {dn}")
+                    connection.modify_s(dn, ldap_modlist)
+                    print(f"Schema entry {dn} modified successfully.")
+                else:
+                    print(f"No object found for {dn}")
+                    raise ldap.NO_SUCH_OBJECT    
+
+            except ldap.INVALID_DN_SYNTAX:
+                print(f"ERROR: Invalid DN syntax for '{dn}' - Please check the DN format.")
+                print("Run `ldapsearch -LLL -Y EXTERNAL -H ldapi:// -b cn=schema,cn=config dn` to find correct DN.")
+
+            except ldap.NO_SUCH_OBJECT:
+                # If DN does not exist, add it
+                print(f"No such object, Adding new schema entry: {dn}")
+                connection.add_s(dn, ldap_modlist)
+                print(f"Schema entry {dn} added successfully.")
+
+            except ldap.LDAPError as e:
+                print(f"Could not add/modify dn {dn}")
+                print(f"LDAP Error: {e}")
+            
             except Exception as e:
+                print(f"Could not add/modify dn {dn}")
                 log.exception(f"Failed to add  {dn}... {attributes}")
                 raise e
+            
+            # make sure connection is closed.
+            finally:
+                connection.unbind_s()
 
 
 def user_ldifs(
@@ -563,9 +599,9 @@ def user_ldifs(
         # pprint(records.all_records)
         # loop through the records
         for entry in records.all_records:
-            log.info(f"Got entry record: {dn}")
             try:
                 dn = entry[0]
+                log.info(f"Got entry record: {dn}")
                 attributes = entry[1]
                 print(f" {entry[0]}")
                 connection.add_s(dn, modlist.addModlist(attributes))
