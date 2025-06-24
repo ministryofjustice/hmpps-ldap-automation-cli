@@ -6,6 +6,8 @@ from cli.logger import (
     log,
 )
 
+oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_19_27")
+
 
 def connection():
     try:
