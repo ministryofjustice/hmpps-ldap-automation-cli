@@ -45,7 +45,7 @@ RUN mkdir -p /opt/oracle && \
     curl -L -o /tmp/instantclient.zip https://download.oracle.com/otn_software/linux/instantclient/1927000/instantclient-basic-linux.x64-19.27.0.0.0dbru.zip && \
     unzip /tmp/instantclient.zip -d /opt/oracle && \
     rm /tmp/instantclient.zip
-ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_19_27
+ENV ORACLE_CLIENT_PATH=/opt/oracle/instantclient_19_27
 
 COPY --from=builder /code /code
 ENV PATH="/code/.venv/bin:$PATH"
