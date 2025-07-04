@@ -9,11 +9,11 @@ from cli.logger import (
 
 
 def initialize_oracle_client():
-    lib_dir = os.environ.get("ORACLE_CLIENT_PATH")
+    lib_dir = os.environ.get("LD_LIBRARY_PATH")
 
     if not lib_dir:
-        log.debug("Error: ORACLE_CLIENT_PATH environment variable is not set.")
-        raise EnvironmentError("ORACLE_CLIENT_PATH is not set.")
+        log.debug("Error: LD_LIBRARY_PATH environment variable is not set.")
+        raise EnvironmentError("LD_LIBRARY_PATH is not set.")
 
     if not os.path.isdir(lib_dir):
         log.debug(f"Error: Oracle client directory does not exist: {lib_dir}")
