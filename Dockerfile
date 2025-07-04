@@ -25,7 +25,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project --no-dev
 
 # install cli
-
 COPY . .
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
@@ -36,7 +35,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
     git \
-    ldap-utils
+    ldap-utils \
+    curl \
+    unzip \
+    libaio1 
+
+# Install Oracle Instant Client
+RUN mkdir -p /opt/oracle && \
+    curl -L -o /tmp/instantclient.zip https://download.oracle.com/otn_software/linux/instantclient/1927000/instantclient-basic-linux.x64-19.27.0.0.0dbru.zip && \
+    unzip /tmp/instantclient.zip -d /opt/oracle && \
+    rm /tmp/instantclient.zip
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_19_27
 
 COPY --from=builder /code /code
 ENV PATH="/code/.venv/bin:$PATH"

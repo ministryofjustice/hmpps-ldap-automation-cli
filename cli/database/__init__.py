@@ -1,4 +1,5 @@
 import oracledb
+import os
 from cli import (
     env,
 )
@@ -7,7 +8,27 @@ from cli.logger import (
 )
 
 
+def initialize_oracle_client():
+    lib_dir = os.environ.get("LD_LIBRARY_PATH")
+
+    if not lib_dir:
+        log.debug("Error: LD_LIBRARY_PATH environment variable is not set.")
+        raise EnvironmentError("LD_LIBRARY_PATH is not set.")
+
+    if not os.path.isdir(lib_dir):
+        log.debug(f"Error: Oracle client directory does not exist: {lib_dir}")
+        raise FileNotFoundError(f"Oracle client path does not exist: {lib_dir}")
+
+    try:
+        oracledb.init_oracle_client(lib_dir=lib_dir)
+        log.debug("Oracle client initialized successfully.")
+    except Exception as e:
+        log.exception(f"Error initializing Oracle client: {e}")
+        raise e
+
+
 def connection():
+    initialize_oracle_client()
     try:
         conn = oracledb.connect(env.secrets.get("DB_CONNECTION_STRING"))
         log.debug("Created database connection successfully")
