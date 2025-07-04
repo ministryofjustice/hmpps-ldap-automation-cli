@@ -74,7 +74,7 @@ def get_repo(
             raise e
     # if there is a token, assume auth is required and use the token and auth_type
     elif token:
-        templated_url = f'https://{auth_type}:{token}@{url.split("//")[1]}'
+        templated_url = f"https://{auth_type}:{token}@{url.split('//')[1]}"
         logging.info(f"cloning with token: {templated_url}")
         try:
             return Repo.clone_from(
