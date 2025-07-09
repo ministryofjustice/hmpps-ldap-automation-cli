@@ -319,6 +319,7 @@ def update_roles(
         log.exception("Failed to connect to LDAP")
         raise e
 
+    actioned_users = []
     actioned = 0
     not_actioned = 0
     failed = 0
@@ -339,6 +340,7 @@ def update_roles(
             if ldap_connection_action.result["result"] == 0:
                 log.info(f"Successfully added role '{item[1]}' to user '{item[0]}'")
                 actioned = actioned + 1
+                actioned_users.append(item[0])
             elif ldap_connection_action.result["result"] == 68:
                 log.info(f"Role '{item[1]}' already present for user '{item[0]}'")
                 not_actioned = not_actioned + 1
@@ -355,6 +357,7 @@ def update_roles(
             if ldap_connection_action.result["result"] == 0:
                 log.info(f"Successfully removed role '{item[1]}' from user '{item[0]}'")
                 actioned = actioned + 1
+                actioned_users.append(item[0])
             elif ldap_connection_action.result["result"] == 32:
                 log.info(f"Role '{item[1]}' already absent for user '{item[0]}'")
                 not_actioned = not_actioned + 1
@@ -382,10 +385,12 @@ def update_roles(
     log.info(f"    - Roles already in desired state for {not_actioned} users")
     log.info(f"    - Failed to remove {failed} roles due to errors")
 
-    if update_notes:
+    if update_notes and len(actioned_users) > 0:
         connection = cli.database.connection()
         log.debug("Created database cursor successfully")
-        for user in matched_users:
+        log.info("Updating notes for: ")
+        log.info(actioned_users)
+        for user in actioned_users:
             try:
                 update_sql = """
                 UPDATE USER_ SET LAST_UPDATED_DATETIME=CURRENT_DATE,
