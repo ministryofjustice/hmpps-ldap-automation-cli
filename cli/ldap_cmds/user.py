@@ -136,20 +136,26 @@ def process_user_roles_list(
     user_role_list, user_ou="ou=Users", root_dn="dc=moj,dc=com"
 ):
     user_roles = parse_user_role_list(user_role_list)
-    try:
-        for (
-            user,
-            roles,
-        ) in user_roles.items():
+    failed_users = []
+    for (
+        user,
+        roles,
+    ) in user_roles.items():
+        try:
             add_roles_to_user(
                 user,
                 roles,
                 user_ou,
                 root_dn,
             )
-    except Exception as e:
-        log.exception("Failed to add role to user")
-        raise e
+        except Exception:
+            log.exception(f"Failed to add roles to user {user}")
+            failed_users.append(user)
+
+    if len(failed_users) > 0:
+        log.error("The following users failed to have roles added:")
+        log.error(failed_users)
+        raise Exception("Failed to add roles to some users")
 
 
 #########################################
